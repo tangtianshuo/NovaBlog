@@ -1,0 +1,8 @@
+[
+	{
+		"id": "1",
+		"username": "admin",
+		"password": "YOUR_BCRYPT_HASHED_PASSWORD_HERE",
+		"role": "admin"
+	}
+]

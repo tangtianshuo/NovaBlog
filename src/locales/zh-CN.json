@@ -1,0 +1,99 @@
+{
+	"nav": {
+		"home": "首页",
+		"projects": "项目",
+		"docs": "文档",
+		"editor": "编辑器",
+		"admin": "管理",
+		"access": "访问",
+		"logout": "退出"
+	},
+	"home": {
+		"title": "赛博枢纽",
+		"subtitle": "> 系统初始化... 欢迎用户",
+		"viewProjects": "查看项目",
+		"readDocs": "阅读文档",
+		"projectArchive": "项目归档",
+		"dataLogs": "数据日志",
+		"loading": "数据加载中...",
+		"noData": "未发现数据",
+		"footer": "系统状态：在线 | © 2026 新星博客"
+	},
+	"login": {
+		"title": "系统接入",
+		"username": "用户名",
+		"password": "密码",
+		"enterUsername": "输入用户名",
+		"enterPassword": "输入密码",
+		"submit": "登录",
+		"authenticating": "认证中...",
+		"success": "登录成功",
+		"failed": "登录失败",
+		"required": "请输入用户名和密码",
+		"error": "登录过程中发生错误"
+	},
+	"admin": {
+		"title": "管理仪表盘",
+		"table": {
+			"title": "标题",
+			"status": "状态",
+			"updated": "更新时间",
+			"actions": "操作"
+		},
+		"loading": "加载中...",
+		"noDocs": "未发现文档",
+		"edit": "编辑",
+		"view": "查看",
+		"delete": "删除",
+		"deleteConfirm": "确定要删除此文档吗？",
+		"deleted": "文档已删除",
+		"fetchError": "获取文档失败",
+		"deleteError": "删除失败"
+	},
+	"editor": {
+		"files": "文件",
+		"drafts": "草稿",
+		"published": "已发布",
+		"untitled": "无标题文档",
+		"save": "保存",
+		"publish": "发布",
+		"saved": "文档已保存",
+		"saveError": "保存失败",
+		"loadError": "加载文档失败",
+		"placeholder": {
+			"title": "无标题文档",
+			"desc": "描述",
+			"tags": "标签 (逗号分隔)",
+			"content": "# 开始写作..."
+		}
+	},
+	"doc": {
+		"decrypting": "解密数据中...",
+		"notFound": "错误：数据损坏或未找到",
+		"share": "分享",
+		"copied": "链接已复制到剪贴板",
+		"minRead": "分钟阅读"
+	},
+	"common": {
+		"language": "语言",
+		"updated": "更新于",
+		"status": {
+			"draft": "草稿",
+			"published": "已发布"
+		}
+	},
+	"projects": {
+		"neonGenesis": {
+			"title": "Neon Genesis",
+			"desc": "基于WebGL构建的未来城市生成器。"
+		},
+		"cyberDeck": {
+			"title": "Cyber Deck",
+			"desc": "便携式黑客站界面模拟。"
+		},
+		"neuralLink": {
+			"title": "Neural Link",
+			"desc": "脑机接口仪表盘原型。"
+		}
+	}
+}

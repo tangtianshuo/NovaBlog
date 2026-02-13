@@ -1,0 +1,99 @@
+{
+	"nav": {
+		"home": "HOME",
+		"projects": "PROJECTS",
+		"docs": "DOCS",
+		"editor": "EDITOR",
+		"admin": "ADMIN",
+		"access": "ACCESS",
+		"logout": "LOGOUT"
+	},
+	"home": {
+		"title": "CYBER_NEXUS",
+		"subtitle": "> INITIALIZING SYSTEM... WELCOME USER",
+		"viewProjects": "VIEW PROJECTS",
+		"readDocs": "READ DOCS",
+		"projectArchive": "PROJECT_ARCHIVE",
+		"dataLogs": "DATA_LOGS",
+		"loading": "LOADING DATA...",
+		"noData": "NO DATA FOUND",
+		"footer": "SYSTEM STATUS: ONLINE | © 2026 NOVA_BLOG"
+	},
+	"login": {
+		"title": "SYSTEM ACCESS",
+		"username": "USERNAME",
+		"password": "PASSWORD",
+		"enterUsername": "ENTER USERNAME",
+		"enterPassword": "ENTER PASSWORD",
+		"submit": "LOGIN",
+		"authenticating": "AUTHENTICATING...",
+		"success": "Login successful",
+		"failed": "Login failed",
+		"required": "Please enter both username and password",
+		"error": "An error occurred during login"
+	},
+	"admin": {
+		"title": "ADMIN_DASHBOARD",
+		"table": {
+			"title": "TITLE",
+			"status": "STATUS",
+			"updated": "UPDATED",
+			"actions": "ACTIONS"
+		},
+		"loading": "LOADING...",
+		"noDocs": "NO DOCUMENTS FOUND",
+		"edit": "Edit",
+		"view": "View",
+		"delete": "Delete",
+		"deleteConfirm": "Are you sure you want to delete this document?",
+		"deleted": "Document deleted",
+		"fetchError": "Failed to fetch documents",
+		"deleteError": "Failed to delete"
+	},
+	"editor": {
+		"files": "FILES",
+		"drafts": "DRAFTS",
+		"published": "PUBLISHED",
+		"untitled": "UNTITLED_DOCUMENT",
+		"save": "SAVE",
+		"publish": "PUBLISH",
+		"saved": "Document saved",
+		"saveError": "Failed to save",
+		"loadError": "Failed to load document",
+		"placeholder": {
+			"title": "UNTITLED_DOCUMENT",
+			"desc": "Description",
+			"tags": "Tags (comma separated)",
+			"content": "# Start writing..."
+		}
+	},
+	"doc": {
+		"decrypting": "DECRYPTING DATA...",
+		"notFound": "ERROR: DATA CORRUPTED OR NOT FOUND",
+		"share": "SHARE",
+		"copied": "Link copied to clipboard",
+		"minRead": "min read"
+	},
+	"common": {
+		"language": "LANGUAGE",
+		"updated": "UPDATED",
+		"status": {
+			"draft": "DRAFT",
+			"published": "PUBLISHED"
+		}
+	},
+	"projects": {
+		"neonGenesis": {
+			"title": "Neon Genesis",
+			"desc": "A futuristic city generator built with WebGL."
+		},
+		"cyberDeck": {
+			"title": "Cyber Deck",
+			"desc": "Portable hacking station interface simulation."
+		},
+		"neuralLink": {
+			"title": "Neural Link",
+			"desc": "Brain-computer interface dashboard prototype."
+		}
+	}
+}

@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  background-color: #0d0d0d;
+  color: #00ffff;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #0d0d0d;
+}
+
+/* Custom Scrollbar for Cyberpunk look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a0033; 
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: #00ffff; 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #39ff14; 
+}

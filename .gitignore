@@ -1,0 +1,54 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node modules
+node_modules
+.npm
+.yarn-integrity
+
+# Build output
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# Trae IDE
+.trae
+
+# Project Data & Uploads
+# Ignore sensitive user data (passwords)
+data/users.json
+
+# Ignore temporary uploads
+uploads/*
+!uploads/.gitkeep
+
+# Optional: Ignore drafts if you don't want to commit unfinished work
+# data/documents/drafts/*
+# !data/documents/drafts/.gitkeep
