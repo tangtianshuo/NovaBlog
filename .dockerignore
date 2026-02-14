@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.vscode
+.trae
+Dockerfile
+Dockerfile.backend
+docker-compose.yml
+.env
+dist
+data/*
+uploads/*
+!data/.gitkeep
+!uploads/.gitkeep
