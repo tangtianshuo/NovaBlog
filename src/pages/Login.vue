@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { message } from 'ant-design-vue';
 import { useI18n } from 'vue-i18n';
+import { apiFetch } from '@/utils/api';
 
 const username = ref('');
 const password = ref('');
@@ -20,7 +21,7 @@ const handleLogin = async () => {
 
   loading.value = true;
   try {
-    const response = await fetch('/api/auth/login', {
+    const response = await apiFetch('/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -8,12 +8,47 @@
 docker-compose up -d
 ```
 
+## Nginx 反向代理（/nova 前缀）
+
+将以下配置保存为 `/etc/nginx/conf.d/novablog.conf`：
+
+```
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size 20m;
+
+    location /nova/ {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://127.0.0.1:18088/;
+    }
+
+    location /nova/api/ {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://127.0.0.1:18087/;
+    }
+}
+```
+
+前端构建时使用的 Base 路径与 API 前缀已在 Docker 构建参数中设置为：
+
+- Base 路径：`/nova`
+- API 前缀：`/nova/api`
+
+因此在 Nginx 下可直接通过 `http://<your-host>/nova` 访问应用。
+
 ## 服务说明
 
 ### 前端服务
 
 - **容器名**: novablog-frontend
-- **外部端口**: 18088
 - **内部端口**: 8080
 - **访问地址**: http://localhost:18088
 
@@ -62,6 +97,12 @@ JWT_SECRET=your-secret-key-change-this-in-production
 
 ```bash
 docker-compose up -d
+```
+
+### 重新构建并启动（变更了 Base 路径或 API 前缀时）
+
+```bash
+docker-compose up -d --build
 ```
 
 ### 停止服务

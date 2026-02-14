@@ -6,6 +6,7 @@ import { Calendar, Clock, Share2, Tag } from 'lucide-vue-next';
 import { message } from 'ant-design-vue';
 import type { Document } from '../../api/types';
 import { useI18n } from 'vue-i18n';
+import { apiFetch } from '@/utils/api';
 
 const route = useRoute();
 const document = ref<Document | null>(null);
@@ -27,7 +28,7 @@ const shareDocument = () => {
 
 onMounted(async () => {
   try {
-    const res = await fetch(`/api/documents/${route.params.id}`);
+    const res = await apiFetch(`/documents/${route.params.id}`);
     const data = await res.json();
     if (data.success) {
       document.value = data.data;

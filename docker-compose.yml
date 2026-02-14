@@ -22,13 +22,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_BASE_PATH: /nova
+        VITE_API_BASE: /nova/api
     container_name: novablog-frontend
     ports:
       - "18088:8080"
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://backend:3001/api
+      - VITE_API_URL=http://backend:3001
     networks:
       - novablog-network
     restart: unless-stopped

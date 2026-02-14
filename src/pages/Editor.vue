@@ -3,6 +3,7 @@
 	import { useAuthStore } from "@/stores/auth"
 	import MarkdownViewer from "@/components/MarkdownViewer.vue"
 	import { message } from "ant-design-vue"
+	import { apiFetch } from "@/utils/api"
 	import {
 		FileText,
 		Save,
@@ -51,7 +52,7 @@
 	const fetchDocuments = async () => {
 		loading.value = true
 		try {
-			const res = await fetch(`/api/documents?status=${viewMode.value}`)
+			const res = await apiFetch(`/documents?status=${viewMode.value}`)
 			const data = await res.json()
 			if (data.success) {
 				documents.value = data.data
@@ -76,7 +77,7 @@
 
 	const selectDocument = async (id: string) => {
 		try {
-			const res = await fetch(`/api/documents/${id}`)
+			const res = await apiFetch(`/documents/${id}`)
 			const data = await res.json()
 			if (data.success) {
 				currentDoc.value = data.data
@@ -206,11 +207,11 @@
 				status,
 			}
 
-			let url = "/api/documents"
+			let url = "/documents"
 			let method = "POST"
 
 			if (currentDoc.value) {
-				url = `/api/documents/${currentDoc.value.metadata.id}`
+				url = `/documents/${currentDoc.value.metadata.id}`
 				method = "PUT"
 				if (status !== currentDoc.value.metadata.status) {
 					;(payload as any).metadata = { status }
@@ -233,7 +234,7 @@
 				body = { ...payload, status }
 			}
 
-			const res = await fetch(url, {
+			const res = await apiFetch(url, {
 				method,
 				headers: {
 					"Content-Type": "application/json",
@@ -263,15 +264,12 @@
 		if (!confirm(t("admin.deleteConfirm"))) return
 
 		try {
-			const res = await fetch(
-				`/api/documents/${currentDoc.value.metadata.id}`,
-				{
-					method: "DELETE",
-					headers: {
-						Authorization: `Bearer ${authStore.token}`,
-					},
+			const res = await apiFetch(`/documents/${currentDoc.value.metadata.id}`, {
+				method: "DELETE",
+				headers: {
+					Authorization: `Bearer ${authStore.token}`,
 				},
-			)
+			})
 
 			if (res.ok) {
 				message.success(t("admin.deleted"))
