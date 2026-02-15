@@ -14,24 +14,21 @@
 		{
 			title: t("projects.neonGenesis.title"),
 			description: t("projects.neonGenesis.desc"),
-			image:
-				"https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=futuristic%20city%20generator%20interface%20cyberpunk&image_size=landscape_16_9",
+			image: "/images/neon-genesis.jpg",
 			tags: ["WebGL", "Vue", "Three.js"],
 			link: "#",
 		},
 		{
 			title: t("projects.cyberDeck.title"),
 			description: t("projects.cyberDeck.desc"),
-			image:
-				"https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cyberpunk%20hacking%20station%20interface&image_size=landscape_16_9",
+			image: "/images/cyber-deck.jpg",
 			tags: ["React", "Electron", "Node.js"],
 			link: "#",
 		},
 		{
 			title: t("projects.neuralLink.title"),
 			description: t("projects.neuralLink.desc"),
-			image:
-				"https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=brain%20computer%20interface%20dashboard%20cyberpunk&image_size=landscape_16_9",
+			image: "/images/neural-link.jpg",
 			tags: ["D3.js", "TypeScript", "WebSockets"],
 			link: "#",
 		},
@@ -59,7 +56,7 @@
 			class="relative h-[60vh] flex items-center justify-center overflow-hidden"
 		>
 			<div
-				class="absolute inset-0 bg-[url('https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cyberpunk%20city%20night%20rain%20neon&image_size=landscape_16_9')] bg-cover bg-center opacity-30"
+				class="absolute inset-0 bg-[url('/images/hero-bg.jpg')] bg-cover bg-center opacity-30"
 			></div>
 			<div
 				class="absolute inset-0 bg-gradient-to-b from-transparent to-cyber-dark"

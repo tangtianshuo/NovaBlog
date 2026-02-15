@@ -58,6 +58,7 @@
 		"save": "保存",
 		"publish": "发布",
 		"saved": "文档已保存",
+		"publishedMsg": "文档已发布",
 		"saveError": "保存失败",
 		"loadError": "加载文档失败",
 		"placeholder": {

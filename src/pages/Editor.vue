@@ -2,7 +2,7 @@
 	import { ref, onMounted, computed } from "vue"
 	import { useAuthStore } from "@/stores/auth"
 	import MarkdownViewer from "@/components/MarkdownViewer.vue"
-	import { message } from "ant-design-vue"
+	import { useCyberToast } from "@/composables/useCyberToast"
 	import { apiFetch } from "@/utils/api"
 	import {
 		FileText,
@@ -27,6 +27,7 @@
 	} from "lucide-vue-next"
 	import type { Document, DocumentMetadata } from "../../api/types"
 	import { useI18n } from "vue-i18n"
+	import ConfirmDialog from "@/components/ConfirmDialog.vue"
 
 	const authStore = useAuthStore()
 	const documents = ref<DocumentMetadata[]>([])
@@ -37,6 +38,8 @@
 	const { t } = useI18n()
 
 	const showToolbar = ref(true)
+	const showDeleteDialog = ref(false)
+	const { success, error, danger } = useCyberToast()
 
 	// Form data
 	const form = ref({
@@ -58,7 +61,7 @@
 				documents.value = data.data
 			}
 		} catch (e) {
-			message.error(t("admin.fetchError"))
+			error(t("admin.fetchError"))
 		} finally {
 			loading.value = false
 		}
@@ -92,7 +95,7 @@
 				}
 			}
 		} catch (e) {
-			message.error(t("editor.loadError"))
+			error(t("editor.loadError"))
 		}
 	}
 
@@ -193,17 +196,22 @@
 	}
 
 	const saveDocument = async (status: "draft" | "published" = "draft") => {
+		if (!form.value.title || form.value.title.trim() === "") {
+			error("请输入标题")
+			return
+		}
+
 		saving.value = true
 		try {
 			const payload = {
-				title: form.value.title,
+				title: form.value.title.trim(),
 				content: form.value.content,
-				description: form.value.description,
+				description: form.value.description || "",
 				tags: form.value.tags
 					.split(",")
 					.map((t) => t.trim())
 					.filter((t) => t),
-				category: form.value.category,
+				category: form.value.category || "",
 				status,
 			}
 
@@ -213,25 +221,6 @@
 			if (currentDoc.value) {
 				url = `/documents/${currentDoc.value.metadata.id}`
 				method = "PUT"
-				if (status !== currentDoc.value.metadata.status) {
-					;(payload as any).metadata = { status }
-				}
-			}
-
-			let body
-			if (method === "PUT") {
-				body = {
-					metadata: {
-						title: payload.title,
-						description: payload.description,
-						tags: payload.tags,
-						category: payload.category,
-						status: status,
-					},
-					content: payload.content,
-				}
-			} else {
-				body = { ...payload, status }
 			}
 
 			const res = await apiFetch(url, {
@@ -240,29 +229,56 @@
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${authStore.token}`,
 				},
-				body: JSON.stringify(body),
+				body: JSON.stringify(
+					method === "POST"
+						? {
+								...payload,
+								status,
+							}
+						: {
+								metadata: {
+									...payload,
+									id: currentDoc.value?.metadata.id,
+									slug: currentDoc.value?.metadata.slug,
+									createdAt: currentDoc.value?.metadata.createdAt,
+									author: currentDoc.value?.metadata.author,
+									publishedAt:
+										status === "published" &&
+										currentDoc.value?.metadata.status !== "published"
+											? new Date().toISOString()
+											: currentDoc.value?.metadata.publishedAt,
+								},
+								content: payload.content,
+							},
+				),
 			})
 
 			const data = await res.json()
 			if (data.success) {
-				message.success(t("editor.saved"))
+				if (status === "published") {
+					success(t("editor.publishedMsg"))
+				} else {
+					success(t("editor.saved"))
+				}
 				currentDoc.value = data.data
 				fetchDocuments()
 			} else {
-				message.error(data.error || t("editor.saveError"))
+				error(data.error || t("editor.saveError"))
 			}
 		} catch (e) {
-			message.error(t("editor.saveError"))
+			error(t("editor.saveError"))
 			console.error(e)
 		} finally {
 			saving.value = false
 		}
 	}
 
+	const confirmDelete = () => {
+		showDeleteDialog.value = true
+	}
+
 	const deleteDocument = async () => {
 		if (!currentDoc.value) return
-		if (!confirm(t("admin.deleteConfirm"))) return
-
 		try {
 			const res = await apiFetch(`/documents/${currentDoc.value.metadata.id}`, {
 				method: "DELETE",
@@ -272,12 +288,13 @@
 			})
 
 			if (res.ok) {
-				message.success(t("admin.deleted"))
+				danger(t("admin.deleted"))
 				createNew()
 				fetchDocuments()
+				showDeleteDialog.value = false
 			}
 		} catch (e) {
-			message.error(t("admin.deleteError"))
+			error(t("admin.deleteError"))
 		}
 	}
 
@@ -396,7 +413,7 @@
 
 					<button
 						v-if="currentDoc"
-						@click="deleteDocument"
+						@click="confirmDelete"
 						class="text-gray-500 hover:text-red-500 ml-2"
 					>
 						<Trash2 class="w-4 h-4" />
@@ -579,5 +596,16 @@
 				</div>
 			</div>
 		</main>
+
+		<ConfirmDialog
+			:show="showDeleteDialog"
+			:title="t('admin.delete')"
+			:message="t('admin.deleteConfirm')"
+			confirm-text="删除"
+			cancel-text="取消"
+			type="danger"
+			@confirm="deleteDocument"
+			@cancel="showDeleteDialog = false"
+		/>
 	</div>
 </template>

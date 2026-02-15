@@ -58,6 +58,7 @@
 		"save": "SAVE",
 		"publish": "PUBLISH",
 		"saved": "Document saved",
+		"publishedMsg": "Document published",
 		"saveError": "Failed to save",
 		"loadError": "Failed to load document",
 		"placeholder": {

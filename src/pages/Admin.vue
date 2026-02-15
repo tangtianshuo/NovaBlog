@@ -1,18 +1,22 @@
 <script setup lang="ts">
 	import { ref, onMounted } from "vue"
 	import { useAuthStore } from "@/stores/auth"
-	import { message } from "ant-design-vue"
+	import { useCyberToast } from "@/composables/useCyberToast"
 	import { Edit, Trash2, ExternalLink } from "lucide-vue-next"
 	import { useRouter } from "vue-router"
 	import type { DocumentMetadata } from "../../api/types"
 	import { useI18n } from "vue-i18n"
 	import { apiFetch } from "@/utils/api"
+	import ConfirmDialog from "@/components/ConfirmDialog.vue"
 
 	const authStore = useAuthStore()
 	const router = useRouter()
 	const documents = ref<DocumentMetadata[]>([])
 	const loading = ref(true)
 	const { t, locale } = useI18n()
+	const showDeleteDialog = ref(false)
+	const docToDelete = ref<string | null>(null)
+	const { success, error, danger } = useCyberToast()
 
 	const fetchDocuments = async () => {
 		loading.value = true
@@ -34,36 +38,38 @@
 					new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
 			)
 		} catch (e) {
-			message.error(t("admin.fetchError"))
+			error(t("admin.fetchError"))
 		} finally {
 			loading.value = false
 		}
 	}
 
-	const deleteDocument = async (id: string) => {
-		if (!confirm(t("admin.deleteConfirm"))) return
+	const confirmDelete = (doc: DocumentMetadata) => {
+		docToDelete.value = doc.id
+		showDeleteDialog.value = true
+	}
+
+	const deleteDocument = async () => {
+		if (!docToDelete.value) return
 		try {
-			const res = await apiFetch(`/documents/${id}`, {
+			const res = await apiFetch(`/documents/${docToDelete.value}`, {
 				method: "DELETE",
 				headers: {
 					Authorization: `Bearer ${authStore.token}`,
 				},
 			})
 			if (res.ok) {
-				message.success(t("admin.deleted"))
+				danger(t("admin.deleted"))
 				fetchDocuments()
+				showDeleteDialog.value = false
+				docToDelete.value = null
 			}
 		} catch (e) {
-			message.error(t("admin.deleteError"))
+			error(t("admin.deleteError"))
 		}
 	}
 
 	const editDocument = (id: string) => {
-		// Navigate to editor with document selected
-		// Since editor handles selection via internal state, we might need query param or store.
-		// For simplicity, let's just go to editor and let user find it, OR add query param support in Editor.
-		// I didn't add query param support in Editor.vue.
-		// I'll skip deep linking for now, just go to Editor.
 		router.push("/editor")
 	}
 
@@ -155,7 +161,7 @@
 									<ExternalLink class="w-4 h-4" />
 								</a>
 								<button
-									@click="deleteDocument(doc.id)"
+									@click="confirmDelete(doc)"
 									class="text-red-500 hover:text-white"
 									:title="t('admin.delete')"
 								>
@@ -167,5 +173,16 @@
 				</table>
 			</div>
 		</div>
+
+		<ConfirmDialog
+			:show="showDeleteDialog"
+			:title="t('admin.delete')"
+			:message="t('admin.deleteConfirm')"
+			confirm-text="删除"
+			cancel-text="取消"
+			type="danger"
+			@confirm="deleteDocument"
+			@cancel="showDeleteDialog = false"
+		/>
 	</div>
 </template>

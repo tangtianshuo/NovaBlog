@@ -27,13 +27,13 @@ REST (Representational State Transfer) 是一种架构风格，主要特点：
 
 ### HTTP 方法
 
-| 方法 | 用途 | 幂等性 | 请求体 |
-|------|------|---------|--------|
-| GET | 获取资源 | 是 | 否 |
-| POST | 创建资源 | 否 | 是 |
-| PUT | 完整更新资源 | 是 | 是 |
-| PATCH | 部分更新资源 | 否 | 是 |
-| DELETE | 删除资源 | 是 | 否 |
+| 方法   | 用途         | 幂等性 | 请求体 |
+| ------ | ------------ | ------ | ------ |
+| GET    | 获取资源     | 是     | 否     |
+| POST   | 创建资源     | 否     | 是     |
+| PUT    | 完整更新资源 | 是     | 是     |
+| PATCH  | 部分更新资源 | 否     | 是     |
+| DELETE | 删除资源     | 是     | 否     |
 
 ## URL 设计
 
@@ -124,13 +124,13 @@ Body:
 
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "123",
-    "name": "张三",
-    "email": "zhang@example.com",
-    "created_at": "2024-01-15T10:00:00Z"
-  }
+	"success": true,
+	"data": {
+		"id": "123",
+		"name": "张三",
+		"email": "zhang@example.com",
+		"created_at": "2024-01-15T10:00:00Z"
+	}
 }
 ```
 
@@ -138,17 +138,17 @@ Body:
 
 ```json
 {
-  "success": true,
-  "data": [
-    { "id": "1", "name": "张三" },
-    { "id": "2", "name": "李四" }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "totalPages": 5
-  }
+	"success": true,
+	"data": [
+		{ "id": "1", "name": "张三" },
+		{ "id": "2", "name": "李四" }
+	],
+	"pagination": {
+		"page": 1,
+		"limit": 20,
+		"total": 100,
+		"totalPages": 5
+	}
 }
 ```
 
@@ -156,17 +156,17 @@ Body:
 
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "邮箱格式不正确",
-    "details": [
-      {
-        "field": "email",
-        "message": "必须是有效的邮箱地址"
-      }
-    ]
-  }
+	"success": false,
+	"error": {
+		"code": "VALIDATION_ERROR",
+		"message": "邮箱格式不正确",
+		"details": [
+			{
+				"field": "email",
+				"message": "必须是有效的邮箱地址"
+			}
+		]
+	}
 }
 ```
 
@@ -174,31 +174,31 @@ Body:
 
 ### 成功状态码
 
-| 状态码 | 含义 | 使用场景 |
-|--------|------|---------|
-| 200 OK | 请求成功 | GET、PUT、PATCH |
-| 201 Created | 资源创建成功 | POST |
-| 204 No Content | 成功但无返回内容 | DELETE |
+| 状态码         | 含义             | 使用场景        |
+| -------------- | ---------------- | --------------- |
+| 200 OK         | 请求成功         | GET、PUT、PATCH |
+| 201 Created    | 资源创建成功     | POST            |
+| 204 No Content | 成功但无返回内容 | DELETE          |
 
 ### 客户端错误
 
-| 状态码 | 含义 | 使用场景 |
-|--------|------|---------|
-| 400 Bad Request | 请求参数错误 | 参数验证失败 |
-| 401 Unauthorized | 未认证 | 缺少或无效的 token |
-| 403 Forbidden | 无权限 | 已认证但权限不足 |
-| 404 Not Found | 资源不存在 | 请求的资源不存在 |
-| 409 Conflict | 资源冲突 | 重复创建、状态冲突 |
-| 422 Unprocessable Entity | 语义错误 | 业务逻辑错误 |
-| 429 Too Many Requests | 请求过多 | 触发限流 |
+| 状态码                   | 含义         | 使用场景           |
+| ------------------------ | ------------ | ------------------ |
+| 400 Bad Request          | 请求参数错误 | 参数验证失败       |
+| 401 Unauthorized         | 未认证       | 缺少或无效的 token |
+| 403 Forbidden            | 无权限       | 已认证但权限不足   |
+| 404 Not Found            | 资源不存在   | 请求的资源不存在   |
+| 409 Conflict             | 资源冲突     | 重复创建、状态冲突 |
+| 422 Unprocessable Entity | 语义错误     | 业务逻辑错误       |
+| 429 Too Many Requests    | 请求过多     | 触发限流           |
 
 ### 服务器错误
 
-| 状态码 | 含义 | 使用场景 |
-|--------|------|---------|
-| 500 Internal Server Error | 服务器内部错误 | 未预期的错误 |
-| 502 Bad Gateway | 网关错误 | 上游服务不可用 |
-| 503 Service Unavailable | 服务不可用 | 维护中、过载 |
+| 状态码                    | 含义           | 使用场景       |
+| ------------------------- | -------------- | -------------- |
+| 500 Internal Server Error | 服务器内部错误 | 未预期的错误   |
+| 502 Bad Gateway           | 网关错误       | 上游服务不可用 |
+| 503 Service Unavailable   | 服务不可用     | 维护中、过载   |
 
 ## 认证和授权
 
@@ -237,16 +237,16 @@ Response: {
 ```typescript
 // 使用验证库（如 Joi、Zod）
 const schema = z.object({
-  name: z.string().min(2).max(50),
-  email: z.string().email(),
-  age: z.number().min(0).max(120)
+	name: z.string().min(2).max(50),
+	email: z.string().email(),
+	age: z.number().min(0).max(120),
 })
 
 const result = schema.safeParse(request.body)
 if (!result.success) {
-  return response.status(400).json({
-    error: result.error.flatten()
-  })
+	return response.status(400).json({
+		error: result.error.flatten(),
+	})
 }
 ```
 
@@ -255,13 +255,13 @@ if (!result.success) {
 ```typescript
 // 使用 DTO 确保响应格式一致
 class UserDTO {
-  id: string
-  name: string
-  email: string
-  
-  excludeSensitive() {
-    return { id: this.id, name: this.name }
-  }
+	id: string
+	name: string
+	email: string
+
+	excludeSensitive() {
+		return { id: this.id, name: this.name }
+	}
 }
 
 const user = await User.findById(id)
@@ -278,10 +278,10 @@ GET /api/users?page=1&limit=20&sort=name:asc
 
 ```typescript
 interface PaginationParams {
-  page: number      // 当前页，从 1 开始
-  limit: number     // 每页数量，默认 20
-  sort?: string     // 排序字段:方向
-  fields?: string   // 返回字段，逗号分隔
+	page: number // 当前页，从 1 开始
+	limit: number // 每页数量，默认 20
+	sort?: string // 排序字段:方向
+	fields?: string // 返回字段，逗号分隔
 }
 ```
 
@@ -320,16 +320,13 @@ GET /api/products?price_min=100&price_max=1000
 
 ```typescript
 // 生成 ETag
-const etag = crypto
-  .createHash('md5')
-  .update(JSON.stringify(data))
-  .digest('hex')
+const etag = crypto.createHash("md5").update(JSON.stringify(data)).digest("hex")
 
-response.setHeader('ETag', etag)
+response.setHeader("ETag", etag)
 
 // 条件请求
-if (request.headers['if-none-match'] === etag) {
-  return response.status(304).end()
+if (request.headers["if-none-match"] === etag) {
+	return response.status(304).end()
 }
 ```
 
@@ -337,13 +334,13 @@ if (request.headers['if-none-match'] === etag) {
 
 ```typescript
 // 公共资源，缓存 1 小时
-response.setHeader('Cache-Control', 'public, max-age=3600')
+response.setHeader("Cache-Control", "public, max-age=3600")
 
 // 私有资源，不缓存
-response.setHeader('Cache-Control', 'private, no-cache')
+response.setHeader("Cache-Control", "private, no-cache")
 
 // 永不缓存
-response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate")
 ```
 
 ## API 文档
@@ -366,14 +363,14 @@ paths:
             type: integer
             default: 1
       responses:
-        '200':
+        "200":
           description: 成功
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
+                  $ref: "#/components/schemas/User"
     post:
       summary: 创建用户
       requestBody:
@@ -381,9 +378,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserInput'
+              $ref: "#/components/schemas/UserInput"
       responses:
-        '201':
+        "201":
           description: 创建成功
 components:
   schemas:
@@ -408,39 +405,41 @@ components:
 
 ```typescript
 // 强制 HTTPS
-if (process.env.NODE_ENV === 'production') {
-  app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https') {
-      return res.redirect(`https://${req.header('host')}${req.url}`)
-    }
-    next()
-  })
+if (process.env.NODE_ENV === "production") {
+	app.use((req, res, next) => {
+		if (req.header("x-forwarded-proto") !== "https") {
+			return res.redirect(`https://${req.header("host")}${req.url}`)
+		}
+		next()
+	})
 }
 ```
 
 ### CORS
 
 ```typescript
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}))
+app.use(
+	cors({
+		origin: process.env.CORS_ORIGIN || "*",
+		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+	}),
+)
 ```
 
 ### 限流
 
 ```typescript
-import rateLimit from 'express-rate-limit'
+import rateLimit from "express-rate-limit"
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 分钟
-  max: 100, // 最多 100 次请求
-  message: '请求过多，请稍后再试'
+	windowMs: 15 * 60 * 1000, // 15 分钟
+	max: 100, // 最多 100 次请求
+	message: "请求过多，请稍后再试",
 })
 
-app.use('/api/', limiter)
+app.use("/api/", limiter)
 ```
 
 ## 测试
@@ -448,25 +447,25 @@ app.use('/api/', limiter)
 ### 集成测试
 
 ```typescript
-describe('User API', () => {
-  it('should create user', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({ name: '张三', email: 'zhang@example.com' })
-      .expect(201)
-    
-    expect(response.body.success).toBe(true)
-    expect(response.body.data).toHaveProperty('id')
-  })
-  
-  it('should return 400 for invalid email', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({ name: '张三', email: 'invalid-email' })
-      .expect(400)
-    
-    expect(response.body.success).toBe(false)
-  })
+describe("User API", () => {
+	it("should create user", async () => {
+		const response = await request(app)
+			.post("/api/users")
+			.send({ name: "张三", email: "zhang@example.com" })
+			.expect(201)
+
+		expect(response.body.success).toBe(true)
+		expect(response.body.data).toHaveProperty("id")
+	})
+
+	it("should return 400 for invalid email", async () => {
+		const response = await request(app)
+			.post("/api/users")
+			.send({ name: "张三", email: "invalid-email" })
+			.expect(400)
+
+		expect(response.body.success).toBe(false)
+	})
 })
 ```
 
@@ -476,20 +475,20 @@ describe('User API', () => {
 
 ```typescript
 app.use((req, res, next) => {
-  const start = Date.now()
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start
-    console.log({
-      method: req.method,
-      url: req.url,
-      status: res.statusCode,
-      duration: `${duration}ms`,
-      ip: req.ip
-    })
-  })
-  
-  next()
+	const start = Date.now()
+
+	res.on("finish", () => {
+		const duration = Date.now() - start
+		console.log({
+			method: req.method,
+			url: req.url,
+			status: res.statusCode,
+			duration: `${duration}ms`,
+			ip: req.ip,
+		})
+	})
+
+	next()
 })
 ```
 
@@ -497,19 +496,19 @@ app.use((req, res, next) => {
 
 ```typescript
 app.use((error, req, res, next) => {
-  console.error('Error:', error)
-  
-  if (error.type === 'entity.parse.failed') {
-    return res.status(400).json({
-      success: false,
-      error: 'Invalid JSON'
-    })
-  }
-  
-  res.status(500).json({
-    success: false,
-    error: 'Internal Server Error'
-  })
+	console.error("Error:", error)
+
+	if (error.type === "entity.parse.failed") {
+		return res.status(400).json({
+			success: false,
+			error: "Invalid JSON",
+		})
+	}
+
+	res.status(500).json({
+		success: false,
+		error: "Internal Server Error",
+	})
 })
 ```
 
@@ -525,7 +524,7 @@ app.get('/api/v1/users', (req, res) => {
 
 // v2 API（新功能）
 app.get('/api/v2/users', (req, res) => {
-  res.json({ 
+  res.json({
     data: [...],
     metadata: { version: '2.0' }
   })
