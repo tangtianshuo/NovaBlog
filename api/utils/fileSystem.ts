@@ -1,10 +1,17 @@
 import fs from "fs/promises"
 import path from "path"
 import matter from "gray-matter"
-import type { Document, DocumentMetadata, User } from "../types.js"
+import type {
+	Document,
+	DocumentMetadata,
+	User,
+	Project,
+	ProjectMetadata,
+} from "../types.js"
 
 const DATA_DIR = path.resolve(process.cwd(), "data")
 const DOCUMENTS_DIR = path.join(DATA_DIR, "documents")
+const PROJECTS_DIR = path.join(DATA_DIR, "projects")
 const USERS_FILE = path.join(DATA_DIR, "users.json")
 
 // Helper to sanitize folder names
@@ -214,6 +221,107 @@ export const fileSystem = {
 			(await this.findDocumentPath(id, "published"))
 		if (existing) {
 			await fs.rm(existing.folderPath, { recursive: true, force: true })
+		}
+	},
+
+	// Projects
+	async getProjects(): Promise<ProjectMetadata[]> {
+		try {
+			const entries = await fs.readdir(PROJECTS_DIR, { withFileTypes: true })
+			const projects: ProjectMetadata[] = []
+
+			for (const entry of entries) {
+				if (entry.isDirectory()) {
+					const projectPath = path.join(PROJECTS_DIR, entry.name)
+					const indexPath = path.join(projectPath, "index.md")
+
+					try {
+						const fileContent = await fs.readFile(indexPath, "utf-8")
+						const { data } = matter(fileContent)
+						if (data.id) {
+							projects.push(data as ProjectMetadata)
+						}
+					} catch (error) {
+						// Skip if no index.md
+					}
+				}
+			}
+
+			return projects.sort(
+				(a, b) =>
+					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+			)
+		} catch (error) {
+			return []
+		}
+	},
+
+	async getProject(id: string): Promise<Project | null> {
+		try {
+			const entries = await fs.readdir(PROJECTS_DIR, { withFileTypes: true })
+
+			for (const entry of entries) {
+				if (entry.isDirectory()) {
+					const projectPath = path.join(PROJECTS_DIR, entry.name)
+					const indexPath = path.join(projectPath, "index.md")
+
+					try {
+						const fileContent = await fs.readFile(indexPath, "utf-8")
+						const { data, content } = matter(fileContent)
+						if (data.id === id) {
+							return {
+								metadata: data as ProjectMetadata,
+								content,
+							}
+						}
+					} catch {}
+				}
+			}
+			return null
+		} catch (error) {
+			return null
+		}
+	},
+
+	async saveProject(project: Project): Promise<void> {
+		const { metadata, content } = project
+
+		const cleanMetadata: Record<string, any> = {}
+		for (const [key, value] of Object.entries(metadata)) {
+			if (value !== undefined && value !== null && value !== "") {
+				cleanMetadata[key] = value
+			}
+		}
+
+		const fileContent = matter.stringify(content, cleanMetadata)
+		const folderName = sanitizeName(metadata.slug || metadata.title)
+		const targetFolder = path.join(PROJECTS_DIR, folderName)
+
+		await fs.mkdir(targetFolder, { recursive: true })
+		await fs.writeFile(path.join(targetFolder, "index.md"), fileContent)
+	},
+
+	async deleteProject(id: string): Promise<void> {
+		try {
+			const entries = await fs.readdir(PROJECTS_DIR, { withFileTypes: true })
+
+			for (const entry of entries) {
+				if (entry.isDirectory()) {
+					const projectPath = path.join(PROJECTS_DIR, entry.name)
+					const indexPath = path.join(projectPath, "index.md")
+
+					try {
+						const fileContent = await fs.readFile(indexPath, "utf-8")
+						const { data } = matter(fileContent)
+						if (data.id === id) {
+							await fs.rm(projectPath, { recursive: true, force: true })
+							return
+						}
+					} catch {}
+				}
+			}
+		} catch (error) {
+			console.error("Error deleting project:", error)
 		}
 	},
 }

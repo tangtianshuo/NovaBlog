@@ -1,22 +1,25 @@
 <script setup lang="ts">
-	import { ref, onMounted } from "vue"
+	import { ref, onMounted, watch } from "vue"
 	import { useAuthStore } from "@/stores/auth"
 	import { useCyberToast } from "@/composables/useCyberToast"
-	import { Edit, Trash2, ExternalLink } from "lucide-vue-next"
-	import { useRouter } from "vue-router"
+	import { Edit, Trash2, ExternalLink, FileText, Folder } from "lucide-vue-next"
+	import { useRouter, useRoute } from "vue-router"
 	import type { DocumentMetadata } from "../../api/types"
 	import { useI18n } from "vue-i18n"
 	import { apiFetch } from "@/utils/api"
 	import ConfirmDialog from "@/components/ConfirmDialog.vue"
+	import ProjectManager from "@/components/ProjectManager.vue"
 
 	const authStore = useAuthStore()
 	const router = useRouter()
+	const route = useRoute()
 	const documents = ref<DocumentMetadata[]>([])
 	const loading = ref(true)
 	const { t, locale } = useI18n()
 	const showDeleteDialog = ref(false)
 	const docToDelete = ref<string | null>(null)
 	const { success, error, danger } = useCyberToast()
+	const activeTab = ref<"documents" | "projects">("documents")
 
 	const fetchDocuments = async () => {
 		loading.value = true
@@ -75,7 +78,22 @@
 
 	onMounted(() => {
 		fetchDocuments()
+
+		if (window.location.hash === "#projects") {
+			activeTab.value = "projects"
+		}
 	})
+
+	watch(
+		() => route.hash,
+		(hash) => {
+			if (hash === "#projects") {
+				activeTab.value = "projects"
+			} else {
+				activeTab.value = "documents"
+			}
+		},
+	)
 </script>
 
 <template>
@@ -85,7 +103,37 @@
 				{{ t("admin.title") }}
 			</h1>
 
+			<!-- Tabs -->
+			<div class="flex gap-4 mb-6">
+				<button
+					@click="activeTab = 'documents'"
+					class="flex items-center gap-2 px-6 py-3 border-2 rounded font-mono transition-all"
+					:class="
+						activeTab === 'documents'
+							? 'border-cyber-green text-cyber-green bg-cyber-green bg-opacity-10'
+							: 'border-gray-700 text-gray-500 hover:border-cyber-green hover:text-cyber-green'
+					"
+				>
+					<FileText class="w-5 h-5" />
+					<span>{{ t("admin.documents") }}</span>
+				</button>
+				<button
+					@click="activeTab = 'projects'"
+					class="flex items-center gap-2 px-6 py-3 border-2 rounded font-mono transition-all"
+					:class="
+						activeTab === 'projects'
+							? 'border-cyber-green text-cyber-green bg-cyber-green bg-opacity-10'
+							: 'border-gray-700 text-gray-500 hover:border-cyber-green hover:text-cyber-green'
+					"
+				>
+					<Folder class="w-5 h-5" />
+					<span>{{ t("admin.projects") }}</span>
+				</button>
+			</div>
+
+			<!-- Documents Tab -->
 			<div
+				v-if="activeTab === 'documents'"
 				class="bg-black bg-opacity-50 border border-cyber-primary rounded overflow-hidden"
 			>
 				<table class="w-full text-left border-collapse">
@@ -172,6 +220,9 @@
 					</tbody>
 				</table>
 			</div>
+
+			<!-- Projects Tab -->
+			<ProjectManager v-if="activeTab === 'projects'" />
 		</div>
 
 		<ConfirmDialog

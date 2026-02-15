@@ -34,6 +34,10 @@
 	},
 	"admin": {
 		"title": "ADMIN_DASHBOARD",
+		"documents": "DOCUMENTS",
+		"projects": "PROJECTS",
+		"createProject": "CREATE_PROJECT",
+		"noProjects": "NO PROJECTS FOUND",
 		"table": {
 			"title": "TITLE",
 			"status": "STATUS",
@@ -63,9 +67,11 @@
 		"loadError": "Failed to load document",
 		"placeholder": {
 			"title": "UNTITLED_DOCUMENT",
-			"desc": "Description",
+			"desc": "Project Description",
 			"tags": "Tags (comma separated)",
-			"content": "# Start writing..."
+			"content": "Start writing project introduction...",
+			"imageUrl": "Project Image URL",
+			"link": "Project Link"
 		}
 	},
 	"doc": {
@@ -74,6 +80,13 @@
 		"share": "SHARE",
 		"copied": "Link copied to clipboard",
 		"minRead": "min read"
+	},
+	"project": {
+		"back": "BACK",
+		"loading": "LOADING...",
+		"notFound": "PROJECT NOT FOUND",
+		"loadError": "Failed to load project",
+		"visitLink": "VISIT LINK"
 	},
 	"common": {
 		"language": "LANGUAGE",

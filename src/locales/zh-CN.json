@@ -34,6 +34,10 @@
 	},
 	"admin": {
 		"title": "管理仪表盘",
+		"documents": "文档管理",
+		"projects": "项目管理",
+		"createProject": "创建项目",
+		"noProjects": "暂无项目",
 		"table": {
 			"title": "标题",
 			"status": "状态",
@@ -63,9 +67,11 @@
 		"loadError": "加载文档失败",
 		"placeholder": {
 			"title": "无标题文档",
-			"desc": "描述",
-			"tags": "标签 (逗号分隔)",
-			"content": "# 开始写作..."
+			"desc": "项目简介",
+			"tags": "标签（逗号分隔）",
+			"content": "开始编写项目详细介绍...",
+			"imageUrl": "项目图片URL",
+			"link": "项目链接"
 		}
 	},
 	"doc": {
@@ -74,6 +80,13 @@
 		"share": "分享",
 		"copied": "链接已复制到剪贴板",
 		"minRead": "分钟阅读"
+	},
+	"project": {
+		"back": "返回",
+		"loading": "加载中...",
+		"notFound": "未找到项目",
+		"loadError": "加载项目失败",
+		"visitLink": "访问链接"
 	},
 	"common": {
 		"language": "语言",

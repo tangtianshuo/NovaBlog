@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { ref, onMounted, computed } from "vue"
 	import { useAuthStore } from "@/stores/auth"
+	import { useRoute, useRouter } from "vue-router"
 	import MarkdownViewer from "@/components/MarkdownViewer.vue"
 	import { useCyberToast } from "@/composables/useCyberToast"
 	import { apiFetch } from "@/utils/api"
@@ -25,13 +26,22 @@
 		Italic,
 		Strikethrough,
 	} from "lucide-vue-next"
-	import type { Document, DocumentMetadata } from "../../api/types"
+	import type {
+		Document,
+		DocumentMetadata,
+		Project,
+		ProjectMetadata,
+	} from "../../api/types"
 	import { useI18n } from "vue-i18n"
 	import ConfirmDialog from "@/components/ConfirmDialog.vue"
 
 	const authStore = useAuthStore()
+	const route = useRoute()
+	const router = useRouter()
 	const documents = ref<DocumentMetadata[]>([])
+	const projects = ref<ProjectMetadata[]>([])
 	const currentDoc = ref<Document | null>(null)
+	const currentProject = ref<Project | null>(null)
 	const loading = ref(false)
 	const saving = ref(false)
 	const viewMode = ref<"draft" | "published">("draft")
@@ -41,6 +51,17 @@
 	const showDeleteDialog = ref(false)
 	const { success, error, danger } = useCyberToast()
 
+	// Check if editing project
+	const isEditingProject = computed(
+		() => route.name === "project-create" || route.name === "project-editor",
+	)
+	const isReady = computed(() => {
+		if (isEditingProject.value) {
+			return true
+		}
+		return !loading.value
+	})
+
 	// Form data
 	const form = ref({
 		title: "",
@@ -48,6 +69,8 @@
 		description: "",
 		tags: "",
 		category: "",
+		imageUrl: "",
+		link: "",
 	})
 
 	const textareaRef = ref<HTMLTextAreaElement | null>(null)
@@ -69,12 +92,15 @@
 
 	const createNew = () => {
 		currentDoc.value = null
+		currentProject.value = null
 		form.value = {
 			title: t("editor.untitled"),
 			content: "",
 			description: "",
 			tags: "",
 			category: "",
+			imageUrl: "",
+			link: "",
 		}
 	}
 
@@ -91,8 +117,35 @@
 						description: currentDoc.value.metadata.description,
 						tags: currentDoc.value.metadata.tags?.join(", ") || "",
 						category: currentDoc.value.metadata.category || "",
+						imageUrl: "",
+						link: "",
 					}
 				}
+			}
+		} catch (e) {
+			error(t("editor.loadError"))
+		}
+	}
+
+	const selectProject = async (id: string) => {
+		try {
+			const res = await apiFetch(`/projects/${id}`)
+			const data = await res.json()
+			if (data.success) {
+				currentProject.value = data.data
+				if (currentProject.value) {
+					form.value = {
+						title: currentProject.value.metadata.title,
+						content: currentProject.value.content,
+						description: currentProject.value.metadata.description,
+						tags: currentProject.value.metadata.tags?.join(", ") || "",
+						category: "",
+						imageUrl: currentProject.value.metadata.imageUrl || "",
+						link: currentProject.value.metadata.link || "",
+					}
+				}
+			} else {
+				error(data.error || t("editor.loadError"))
 			}
 		} catch (e) {
 			error(t("editor.loadError"))
@@ -203,67 +256,120 @@
 
 		saving.value = true
 		try {
-			const payload = {
-				title: form.value.title.trim(),
-				content: form.value.content,
-				description: form.value.description || "",
-				tags: form.value.tags
-					.split(",")
-					.map((t) => t.trim())
-					.filter((t) => t),
-				category: form.value.category || "",
-				status,
-			}
-
-			let url = "/documents"
-			let method = "POST"
-
-			if (currentDoc.value) {
-				url = `/documents/${currentDoc.value.metadata.id}`
-				method = "PUT"
-			}
-
-			const res = await apiFetch(url, {
-				method,
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${authStore.token}`,
-				},
-				body: JSON.stringify(
-					method === "POST"
-						? {
-								...payload,
-								status,
-							}
-						: {
-								metadata: {
-									...payload,
-									id: currentDoc.value?.metadata.id,
-									slug: currentDoc.value?.metadata.slug,
-									createdAt: currentDoc.value?.metadata.createdAt,
-									author: currentDoc.value?.metadata.author,
-									publishedAt:
-										status === "published" &&
-										currentDoc.value?.metadata.status !== "published"
-											? new Date().toISOString()
-											: currentDoc.value?.metadata.publishedAt,
-								},
-								content: payload.content,
-							},
-				),
-			})
-
-			const data = await res.json()
-			if (data.success) {
-				if (status === "published") {
-					success(t("editor.publishedMsg"))
-				} else {
-					success(t("editor.saved"))
+			if (isEditingProject.value) {
+				const payload = {
+					title: form.value.title.trim(),
+					content: form.value.content,
+					description: form.value.description || "",
+					tags: form.value.tags
+						.split(",")
+						.map((t) => t.trim())
+						.filter((t) => t),
+					imageUrl: form.value.imageUrl || "",
+					link: form.value.link || "",
 				}
-				currentDoc.value = data.data
-				fetchDocuments()
+
+				let url = "/projects"
+				let method = "POST"
+
+				if (currentProject.value) {
+					url = `/projects/${currentProject.value.metadata.id}`
+					method = "PUT"
+				}
+
+				const res = await apiFetch(url, {
+					method,
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${authStore.token}`,
+					},
+					body: JSON.stringify({
+						metadata:
+							method === "POST"
+								? {
+										...payload,
+									}
+								: {
+										...payload,
+										id: currentProject.value?.metadata.id,
+										slug: currentProject.value?.metadata.slug,
+										createdAt: currentProject.value?.metadata.createdAt,
+									},
+						content: payload.content,
+					}),
+				})
+
+				const data = await res.json()
+				if (data.success) {
+					success(t("editor.saved"))
+					currentProject.value = data.data
+					router.push("/admin#projects")
+				} else {
+					error(data.error || t("editor.saveError"))
+				}
 			} else {
-				error(data.error || t("editor.saveError"))
+				const payload = {
+					title: form.value.title.trim(),
+					content: form.value.content,
+					description: form.value.description || "",
+					tags: form.value.tags
+						.split(",")
+						.map((t) => t.trim())
+						.filter((t) => t),
+					category: form.value.category || "",
+					status,
+				}
+
+				let url = "/documents"
+				let method = "POST"
+
+				if (currentDoc.value) {
+					url = `/documents/${currentDoc.value.metadata.id}`
+					method = "PUT"
+				}
+
+				const res = await apiFetch(url, {
+					method,
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${authStore.token}`,
+					},
+					body: JSON.stringify(
+						method === "POST"
+							? {
+									...payload,
+									status,
+								}
+							: {
+									metadata: {
+										...payload,
+										id: currentDoc.value?.metadata.id,
+										slug: currentDoc.value?.metadata.slug,
+										createdAt: currentDoc.value?.metadata.createdAt,
+										author: currentDoc.value?.metadata.author,
+										publishedAt:
+											status === "published" &&
+											currentDoc.value?.metadata.status !== "published"
+												? new Date().toISOString()
+												: currentDoc.value?.metadata.publishedAt,
+									},
+									content: payload.content,
+								},
+					),
+				})
+
+				const data = await res.json()
+				if (data.success) {
+					if (status === "published") {
+						success(t("editor.publishedMsg"))
+					} else {
+						success(t("editor.saved"))
+					}
+					currentDoc.value = data.data
+					fetchDocuments()
+				} else {
+					error(data.error || t("editor.saveError"))
+				}
 			}
 		} catch (e) {
 			error(t("editor.saveError"))
@@ -278,23 +384,50 @@
 	}
 
 	const deleteDocument = async () => {
-		if (!currentDoc.value) return
-		try {
-			const res = await apiFetch(`/documents/${currentDoc.value.metadata.id}`, {
-				method: "DELETE",
-				headers: {
-					Authorization: `Bearer ${authStore.token}`,
-				},
-			})
+		if (isEditingProject.value) {
+			if (!currentProject.value) return
+			try {
+				const res = await apiFetch(
+					`/projects/${currentProject.value.metadata.id}`,
+					{
+						method: "DELETE",
+						headers: {
+							Authorization: `Bearer ${authStore.token}`,
+						},
+					},
+				)
 
-			if (res.ok) {
-				danger(t("admin.deleted"))
-				createNew()
-				fetchDocuments()
-				showDeleteDialog.value = false
+				if (res.ok) {
+					danger(t("admin.deleted"))
+					createNew()
+					router.push("/admin#projects")
+					showDeleteDialog.value = false
+				}
+			} catch (e) {
+				error(t("admin.deleteError"))
 			}
-		} catch (e) {
-			error(t("admin.deleteError"))
+		} else {
+			if (!currentDoc.value) return
+			try {
+				const res = await apiFetch(
+					`/documents/${currentDoc.value.metadata.id}`,
+					{
+						method: "DELETE",
+						headers: {
+							Authorization: `Bearer ${authStore.token}`,
+						},
+					},
+				)
+
+				if (res.ok) {
+					danger(t("admin.deleted"))
+					createNew()
+					fetchDocuments()
+					showDeleteDialog.value = false
+				}
+			} catch (e) {
+				error(t("admin.deleteError"))
+			}
 		}
 	}
 
@@ -314,16 +447,25 @@
 	}
 
 	onMounted(() => {
-		fetchDocuments()
-		createNew()
+		if (isEditingProject.value) {
+			if (route.params.id) {
+				selectProject(route.params.id as string)
+			} else {
+				createNew()
+			}
+		} else {
+			fetchDocuments()
+			createNew()
+		}
 	})
 </script>
 
 <template>
 	<div class="flex h-screen bg-cyber-dark text-white pt-16 overflow-hidden">
-		<!-- Sidebar -->
+		<!-- Sidebar - Only show when editing documents -->
 		<aside
-			class="w-64 border-r border-cyber-primary flex flex-col bg-black bg-opacity-50"
+			v-if="!isEditingProject"
+			class="w-64 border-r border-cyber-primary flex flex-col bg-black bg-opacity-50 flex-shrink-0"
 		>
 			<div
 				class="p-4 border-b border-cyber-primary flex justify-between items-center"
@@ -382,7 +524,18 @@
 		</aside>
 
 		<!-- Main Editor -->
-		<main class="flex-1 flex flex-col min-w-0">
+		<main
+			v-if="isReady"
+			class="flex-1 flex flex-col min-w-0 overflow-hidden"
+		>
+			<!-- Editor Mode Indicator -->
+			<div
+				v-if="isEditingProject"
+				class="bg-cyber-pink bg-opacity-20 border-b border-cyber-pink px-4 py-2"
+			>
+				<span class="text-xs font-mono text-cyber-pink"> PROJECT EDITOR </span>
+			</div>
+
 			<!-- Toolbar -->
 			<div
 				class="h-14 border-b border-cyber-primary flex items-center justify-between px-4 bg-black bg-opacity-30"
@@ -404,6 +557,7 @@
 					</button>
 
 					<button
+						v-if="!isEditingProject"
 						@click="saveDocument('published')"
 						:disabled="saving"
 						class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-green text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all"
@@ -412,7 +566,7 @@
 					</button>
 
 					<button
-						v-if="currentDoc"
+						v-if="currentDoc || currentProject"
 						@click="confirmDelete"
 						class="text-gray-500 hover:text-red-500 ml-2"
 					>
@@ -434,6 +588,18 @@
 					v-model="form.tags"
 					:placeholder="t('editor.placeholder.tags')"
 					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none"
+				/>
+				<input
+					v-if="isEditingProject"
+					v-model="form.imageUrl"
+					:placeholder="t('editor.placeholder.imageUrl')"
+					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none col-span-2"
+				/>
+				<input
+					v-if="isEditingProject"
+					v-model="form.link"
+					:placeholder="t('editor.placeholder.link')"
+					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none col-span-2"
 				/>
 			</div>
 
