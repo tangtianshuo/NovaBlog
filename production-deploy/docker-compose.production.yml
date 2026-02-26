@@ -39,7 +39,7 @@ services:
       context: ../  # Build from parent directory
       dockerfile: production-deploy/Dockerfile.frontend.nginx
       args:
-        VITE_BASE_PATH: /
+        VITE_BASE_PATH: /nova/  # 修改这里：将 / 改为你的服务名，例如 /nova/，必须以 / 结尾
         VITE_API_BASE: /api
     container_name: novablog-production-frontend
     ports:
