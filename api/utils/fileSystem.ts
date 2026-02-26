@@ -7,12 +7,15 @@ import type {
 	User,
 	Project,
 	ProjectMetadata,
+	Resume,
+	ResumeMetadata,
 } from "../types.js"
 
 const DATA_DIR = path.resolve(process.cwd(), "data")
 const DOCUMENTS_DIR = path.join(DATA_DIR, "documents")
 const PROJECTS_DIR = path.join(DATA_DIR, "projects")
 const USERS_FILE = path.join(DATA_DIR, "users.json")
+const RESUME_FILE = path.join(DATA_DIR, "resume.json")
 
 // Helper to sanitize folder names
 const sanitizeName = (name: string) => name.replace(/[\\/:*?"<>|]/g, "-")
@@ -323,5 +326,19 @@ export const fileSystem = {
 		} catch (error) {
 			console.error("Error deleting project:", error)
 		}
+	},
+
+	// Resume
+	async getResume(): Promise<Resume | null> {
+		try {
+			const data = await fs.readFile(RESUME_FILE, "utf-8")
+			return JSON.parse(data) as Resume
+		} catch {
+			return null
+		}
+	},
+
+	async saveResume(resume: Resume): Promise<void> {
+		await fs.writeFile(RESUME_FILE, JSON.stringify(resume, null, 2))
 	},
 }

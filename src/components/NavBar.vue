@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { Terminal, Code, LogOut, User, Globe } from 'lucide-vue-next';
+import { Terminal, Code, LogOut, User, Globe, FileText } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
@@ -39,6 +39,11 @@ const toggleLanguage = () => {
           <router-link to="/editor" class="text-cyber-pink hover:text-white transition-colors flex items-center space-x-1">
             <Code class="w-4 h-4" />
             <span class="font-mono text-xs">{{ t('nav.editor') }}</span>
+          </router-link>
+
+          <router-link to="/resume" class="text-cyber-neon hover:text-white transition-colors flex items-center space-x-1">
+            <FileText class="w-4 h-4" />
+            <span class="font-mono text-xs">{{ t('nav.resume') }}</span>
           </router-link>
           
           <router-link to="/admin" class="text-cyber-green hover:text-white transition-colors flex items-center space-x-1">

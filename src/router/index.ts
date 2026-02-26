@@ -5,6 +5,7 @@ import ProjectDetail from "@/pages/ProjectDetail.vue"
 import Login from "@/pages/Login.vue"
 import Editor from "@/pages/Editor.vue"
 import Admin from "@/pages/Admin.vue"
+import ResumeEditor from "@/pages/ResumeEditor.vue"
 import { useAuthStore } from "@/stores/auth"
 
 // Define route configuration
@@ -57,6 +58,12 @@ const routes = [
 		path: "/admin",
 		name: "admin",
 		component: Admin,
+		meta: { requiresAuth: true },
+	},
+	{
+		path: "/resume",
+		name: "resume",
+		component: ResumeEditor,
 		meta: { requiresAuth: true },
 	},
 ]

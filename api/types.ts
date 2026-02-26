@@ -42,3 +42,74 @@ export interface ProjectMetadata {
 	createdAt: string
 	updatedAt: string
 }
+
+export interface Resume {
+	metadata: ResumeMetadata
+	content: ResumeContent
+}
+
+export interface ResumeMetadata {
+	id: string
+	name: string
+	title: string
+	email: string
+	phone: string
+	location: string
+	website?: string
+	github?: string
+	linkedin?: string
+	summary: string
+	skills: string[]
+	createdAt: string
+	updatedAt: string
+}
+
+export interface ResumeContent {
+	education: Education[]
+	experience: Experience[]
+	projects: ResumeProject[]
+	certifications: Certification[]
+	awards: Award[]
+}
+
+export interface Education {
+	id: string
+	school: string
+	degree: string
+	major: string
+	startDate: string
+	endDate: string
+	description: string
+}
+
+export interface Experience {
+	id: string
+	company: string
+	position: string
+	location: string
+	startDate: string
+	endDate: string
+	description: string
+}
+
+export interface ResumeProject {
+	id: string
+	name: string
+	description: string
+	technologies: string[]
+	link?: string
+}
+
+export interface Certification {
+	id: string
+	name: string
+	issuer: string
+	date: string
+}
+
+export interface Award {
+	id: string
+	name: string
+	issuer: string
+	date: string
+}

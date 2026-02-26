@@ -15,6 +15,7 @@ import authRoutes from "./routes/auth.js"
 import documentsRoutes from "./routes/documents.js"
 import projectsRoutes from "./routes/projects.js"
 import uploadRoutes from "./routes/upload.js"
+import resumeRoutes from "./routes/resume.js"
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -40,7 +41,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/documents", documentsRoutes)
 app.use("/api/projects", projectsRoutes)
 app.use("/api/upload", uploadRoutes)
-
+app.use("/api/resume", resumeRoutes)
 
 /**
  * health
