@@ -9,7 +9,7 @@ NC='\033[0m'
 
 REPO_URL="https://github.com/tangtianshuo/NovaBlog.git"
 BRANCH="release"
-COMPOSE_FILE="docker-compose.production.yml"
+COMPOSE_FILE="/deploy/docker-compose.production.yml"
 APP_DIR="/home/root123/docker/NovaBlog/"
 BACKUP_DIR="/home/root123/docker/NovaBlog/"
 
