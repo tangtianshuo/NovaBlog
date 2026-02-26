@@ -6,13 +6,14 @@ import traeBadgePlugin from "vite-plugin-trae-solo-badge"
 
 const apiUrl = process.env.VITE_API_URL || "http://localhost:3001"
 const basePath = process.env.VITE_BASE_PATH || "/"
+const isProduction = process.env.NODE_ENV === "production"
 
 export default defineConfig({
 	build: {
 		sourcemap: "hidden",
 	},
 	base: basePath,
-	plugins: [vue(), Inspector()],
+	plugins: [vue(), Inspector(), ...(isProduction ? [] : [traeBadgePlugin()])],
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
