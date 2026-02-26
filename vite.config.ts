@@ -13,7 +13,7 @@ export default defineConfig({
 		sourcemap: "hidden",
 	},
 	base: basePath,
-	plugins: [vue(), Inspector(), ...(isProduction ? [] : [traeBadgePlugin()])],
+	plugins: [vue(), Inspector()],
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
