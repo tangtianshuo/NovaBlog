@@ -3,7 +3,7 @@
 # 支持外部dist文件夹挂载
 
 # 第一阶段：构建Vue.js应用
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 

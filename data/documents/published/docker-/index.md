@@ -71,7 +71,7 @@ docker run -v mydata:/data nginx
 ### 配置示例
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   web:
@@ -142,10 +142,10 @@ docker-compose up -d
 
 ### 服务说明
 
-| 服务 | 容器名 | 外部端口 | 内部端口 |
-|------|---------|----------|----------|
-| 前端 | novablog-frontend | 18088 | 8080 |
-| 后端 | novablog-backend | 18087 | 3001 |
+| 服务 | 容器名            | 外部端口 | 内部端口 |
+| ---- | ----------------- | -------- | -------- |
+| 前端 | novablog-frontend | 18088    | 8080     |
+| 后端 | novablog-backend  | 18087    | 3001     |
 
 ### 网络配置
 
@@ -165,14 +165,14 @@ graph LR
 
 ```dockerfile
 # 使用多阶段构建减小镜像体积
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./
@@ -206,10 +206,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
 ```
 

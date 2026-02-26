@@ -2,7 +2,6 @@ import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
 import path from "path"
 import Inspector from "unplugin-vue-dev-locator/vite"
-import traeBadgePlugin from "vite-plugin-trae-solo-badge"
 
 const apiUrl = process.env.VITE_API_URL || "http://localhost:3001"
 const basePath = process.env.VITE_BASE_PATH || "/"
