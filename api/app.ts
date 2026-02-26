@@ -14,10 +14,12 @@ import { fileURLToPath } from "url"
 import authRoutes from "./routes/auth.js"
 import documentsRoutes from "./routes/documents.js"
 import projectsRoutes from "./routes/projects.js"
+import uploadRoutes from "./routes/upload.js"
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const rootDir = path.resolve(__dirname, "../")
 
 // load env
 dotenv.config()
@@ -28,12 +30,17 @@ app.use(cors())
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
+// Serve static uploads
+app.use("/uploads", express.static(path.join(rootDir, "uploads")))
+
 /**
  * API Routes
  */
 app.use("/api/auth", authRoutes)
 app.use("/api/documents", documentsRoutes)
 app.use("/api/projects", projectsRoutes)
+app.use("/api/upload", uploadRoutes)
+
 
 /**
  * health

@@ -73,7 +73,7 @@
 	}
 
 	const editDocument = (id: string) => {
-		router.push("/editor")
+		router.push(`/editor/doc/${id}`)
 	}
 
 	onMounted(() => {
@@ -189,7 +189,7 @@
 								</span>
 							</td>
 							<td class="p-4 text-gray-400">
-								{{ new Date(doc.updatedAt).toLocaleDateString(locale.value) }}
+								{{ new Date(doc.updatedAt).toLocaleDateString(locale) }}
 							</td>
 							<td class="p-4 flex gap-2">
 								<button

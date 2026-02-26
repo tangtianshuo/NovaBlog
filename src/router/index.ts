@@ -36,6 +36,12 @@ const routes = [
 		meta: { requiresAuth: true },
 	},
 	{
+		path: "/editor/doc/:id",
+		name: "document-editor",
+		component: Editor,
+		meta: { requiresAuth: true },
+	},
+	{
 		path: "/editor/project",
 		name: "project-create",
 		component: Editor,

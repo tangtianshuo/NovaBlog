@@ -27,14 +27,7 @@ export interface Document {
 }
 
 export interface Project {
-	id: string
-	title: string
-	description: string
-	imageUrl: string
-	link?: string
-	tags: string[]
-	createdAt: string
-	updatedAt: string
+	metadata: ProjectMetadata
 	content: string
 }
 

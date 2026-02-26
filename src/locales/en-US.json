@@ -65,6 +65,15 @@
 		"publishedMsg": "Document published",
 		"saveError": "Failed to save",
 		"loadError": "Failed to load document",
+		"label": {
+			"desc": "Description",
+			"tags": "Tags",
+			"imageUrl": "Cover Image",
+			"link": "Link"
+		},
+		"upload": "Upload Image",
+		"uploadSuccess": "Image uploaded successfully",
+		"uploadError": "Image upload failed",
 		"placeholder": {
 			"title": "UNTITLED_DOCUMENT",
 			"desc": "Project Description",

@@ -25,6 +25,7 @@
 		Bold,
 		Italic,
 		Strikethrough,
+		Upload,
 	} from "lucide-vue-next"
 	import type {
 		Document,
@@ -61,6 +62,47 @@
 		}
 		return !loading.value
 	})
+
+	const fileInputRef = ref<HTMLInputElement | null>(null)
+	const uploading = ref(false)
+
+	const triggerUpload = () => {
+		fileInputRef.value?.click()
+	}
+
+	const handleFileUpload = async (event: Event) => {
+		const target = event.target as HTMLInputElement
+		if (!target.files || target.files.length === 0) return
+
+		const file = target.files[0]
+		const formData = new FormData()
+		formData.append("file", file)
+
+		uploading.value = true
+		try {
+			const res = await apiFetch("/upload", {
+				method: "POST",
+				body: formData,
+				// Content-Type header is automatically set by browser for FormData
+			})
+			const data = await res.json()
+			if (data.success) {
+				form.value.imageUrl = data.url
+				success(t("editor.uploadSuccess") || "Image uploaded successfully")
+			} else {
+				error(data.error || t("editor.uploadError") || "Upload failed")
+			}
+		} catch (e) {
+			error(t("editor.uploadError") || "Upload failed")
+			console.error(e)
+		} finally {
+			uploading.value = false
+			// Reset input
+			if (fileInputRef.value) {
+				fileInputRef.value.value = ""
+			}
+		}
+	}
 
 	// Form data
 	const form = ref({
@@ -446,7 +488,7 @@
 		fetchDocuments()
 	}
 
-	onMounted(() => {
+	onMounted(async () => {
 		if (isEditingProject.value) {
 			if (route.params.id) {
 				selectProject(route.params.id as string)
@@ -454,8 +496,16 @@
 				createNew()
 			}
 		} else {
-			fetchDocuments()
-			createNew()
+			if (route.name === "document-editor" && route.params.id) {
+				await selectDocument(route.params.id as string)
+				if (currentDoc.value?.metadata.status === "published") {
+					viewMode.value = "published"
+				}
+				await fetchDocuments()
+			} else {
+				await fetchDocuments()
+				createNew()
+			}
 		}
 	})
 </script>
@@ -530,10 +580,19 @@
 		>
 			<!-- Editor Mode Indicator -->
 			<div
-				v-if="isEditingProject"
-				class="bg-cyber-pink bg-opacity-20 border-b border-cyber-pink px-4 py-2"
+				class="border-b px-4 py-2 flex items-center justify-between"
+				:class="
+					isEditingProject
+						? 'bg-cyber-pink bg-opacity-20 border-cyber-pink'
+						: 'bg-cyber-neon bg-opacity-20 border-cyber-neon'
+				"
 			>
-				<span class="text-xs font-mono text-cyber-pink"> PROJECT EDITOR </span>
+				<span
+					class="text-xs font-mono font-bold"
+					:class="isEditingProject ? 'text-cyber-pink' : 'text-cyber-neon'"
+				>
+					{{ isEditingProject ? "PROJECT EDITOR" : "ARTICLE EDITOR" }}
+				</span>
 			</div>
 
 			<!-- Toolbar -->
@@ -579,35 +638,89 @@
 			<div
 				class="grid grid-cols-2 gap-4 p-4 border-b border-cyber-primary bg-black bg-opacity-20"
 			>
-				<input
-					v-model="form.description"
-					:placeholder="t('editor.placeholder.desc')"
-					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none"
-				/>
-				<input
-					v-model="form.tags"
-					:placeholder="t('editor.placeholder.tags')"
-					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none"
-				/>
-				<input
+				<div class="flex flex-col gap-1">
+					<label class="text-xs text-gray-500 font-mono">{{
+						t("editor.label.desc")
+					}}</label>
+					<input
+						v-model="form.description"
+						:placeholder="t('editor.placeholder.desc')"
+						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+					/>
+				</div>
+
+				<div class="flex flex-col gap-1">
+					<label class="text-xs text-gray-500 font-mono">{{
+						t("editor.label.tags")
+					}}</label>
+					<input
+						v-model="form.tags"
+						:placeholder="t('editor.placeholder.tags')"
+						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+					/>
+				</div>
+
+				<div v-if="isEditingProject" class="col-span-2 flex flex-col gap-1">
+					<label class="text-xs text-gray-500 font-mono">{{
+						t("editor.label.imageUrl")
+					}}</label>
+					<div class="flex gap-2">
+						<input
+							v-model="form.imageUrl"
+							:placeholder="t('editor.placeholder.imageUrl')"
+							class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						/>
+						<button
+							@click="triggerUpload"
+							class="p-1 hover:text-cyber-neon transition-colors"
+							:title="t('editor.upload') || 'Upload Image'"
+							:disabled="uploading"
+						>
+							<Upload
+								class="w-4 h-4"
+								:class="{ 'animate-pulse': uploading }"
+							/>
+						</button>
+						<input
+							type="file"
+							ref="fileInputRef"
+							class="hidden"
+							accept="image/*"
+							@change="handleFileUpload"
+						/>
+					</div>
+				</div>
+
+				<div
 					v-if="isEditingProject"
-					v-model="form.imageUrl"
-					:placeholder="t('editor.placeholder.imageUrl')"
-					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none col-span-2"
-				/>
-				<input
-					v-if="isEditingProject"
-					v-model="form.link"
-					:placeholder="t('editor.placeholder.link')"
-					class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none col-span-2"
-				/>
+					class="col-span-2 flex flex-col gap-1"
+				>
+					<label class="text-xs text-gray-500 font-mono">{{
+						t("editor.label.link")
+					}}</label>
+					<input
+						v-model="form.link"
+						:placeholder="t('editor.placeholder.link')"
+						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+					/>
+				</div>
 			</div>
 
 			<!-- Markdown Toolbar -->
 			<div
 				class="border-b border-cyber-primary bg-black bg-opacity-20 px-4 py-2 flex flex-wrap gap-1 items-center"
 			>
-				<div class="text-xs text-gray-500 font-mono mr-2">MARKDOWN</div>
+				<div
+					class="text-xs text-gray-500 font-mono mr-2 flex items-center gap-2"
+				>
+					<span>MARKDOWN</span>
+					<span
+						class="font-bold"
+						:class="isEditingProject ? 'text-cyber-pink' : 'text-cyber-neon'"
+					>
+						[{{ isEditingProject ? "PROJECT" : "ARTICLE" }}]
+					</span>
+				</div>
 
 				<!-- Headings -->
 				<div class="flex gap-1 border-r border-gray-700 pr-2">
