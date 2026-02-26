@@ -65,22 +65,22 @@ backup_data() {
 clone_or_pull() {
     log_info "Cloning/Pulling repository..."
 
-    if [ -z "$REPO_URL" ]; then
-        log_error "REPO_URL environment variable is not set"
-        exit 1
-    fi
+    # if [ -z "$REPO_URL" ]; then
+    #     log_error "REPO_URL environment variable is not set"
+    #     exit 1
+    # fi
 
-    if [ ! -d "$APP_DIR/.git" ]; then
-        log_info "Cloning repository to $APP_DIR..."
-        mkdir -p "$APP_DIR"
-        git clone -b "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
-    else
-        log_info "Pulling latest changes..."
-        cd "$APP_DIR"
-        git fetch origin
-        git checkout "$BRANCH"
-        git pull origin "$BRANCH"
-    fi
+    # if [ ! -d "$APP_DIR/.git" ]; then
+    #     log_info "Cloning repository to $APP_DIR..."
+    #     mkdir -p "$APP_DIR"
+    #     git clone -b "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
+    # else
+    #     log_info "Pulling latest changes..."
+    #     cd "$APP_DIR"
+    #     git fetch origin
+    #     git checkout "$BRANCH"
+    #     git pull origin "$BRANCH"
+    # fi
 
     log_info "Repository updated to latest $BRANCH branch"
 }
@@ -163,7 +163,7 @@ main() {
 
     backup_data
 
-    clone_or_pull
+    # clone_or_pull
 
     stop_containers
 
