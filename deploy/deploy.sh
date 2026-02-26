@@ -7,8 +7,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-REPO_URL="${REPO_URL}"
-BRANCH="${BRANCH:-release}"
+REPO_URL="https://github.com/tangtianshuo/NovaBlog.git"
+BRANCH="release"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.production.yml}"
 APP_DIR="${APP_DIR:-/opt/novablog}"
 BACKUP_DIR="${BACKUP_DIR:-/opt/novablog_backups}"
