@@ -127,11 +127,11 @@ build_images() {
     
     # Build backend
     log_info "Building backend image..."
-    docker compose -f "${COMPOSE_FILE}" build backend
+    docker compose -f "${COMPOSE_FILE}" build --no-cache backend
     
     # Build frontend
     log_info "Building frontend image..."
-    docker compose -f "${COMPOSE_FILE}" build frontend
+    docker compose -f "${COMPOSE_FILE}" build --no-cache frontend
     
     log_success "Docker images built successfully."
 }
