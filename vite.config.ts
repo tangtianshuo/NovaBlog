@@ -12,19 +12,7 @@ export default defineConfig({
 		sourcemap: "hidden",
 	},
 	base: basePath,
-	plugins: [
-		vue(),
-		Inspector(),
-		traeBadgePlugin({
-			variant: "dark",
-			position: "bottom-right",
-			prodOnly: true,
-			clickable: true,
-			clickUrl: "https://www.trae.ai/solo?join=1",
-			autoTheme: true,
-			autoThemeTarget: "#app",
-		}),
-	],
+	plugins: [vue(), Inspector()],
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),

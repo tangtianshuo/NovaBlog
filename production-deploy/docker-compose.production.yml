@@ -1,0 +1,119 @@
+version: "3.8"
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: ../  # Build from parent directory
+      dockerfile: production-deploy/Dockerfile.backend.production
+    container_name: novablog-production-backend
+    ports:
+      - "19087:3001"  # Different port to avoid conflict with existing deployment
+    volumes:
+      - ../data:/app/data:rw
+      - ../uploads:/app/uploads:rw
+      - ./logs/backend:/app/logs:rw
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - LOG_LEVEL=info
+      - DATABASE_PATH=/app/data/database.sqlite
+    networks:
+      - novablog-production-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend Web Service (Nginx)
+  frontend:
+    build:
+      context: ../  # Build from parent directory
+      dockerfile: production-deploy/Dockerfile.frontend.nginx
+      args:
+        VITE_BASE_PATH: /
+        VITE_API_BASE: /api
+    container_name: novablog-production-frontend
+    ports:
+      - "19088:80"  # Nginx使用80端口，映射到宿主机的19088
+    volumes:
+      - ../dist:/dist:ro  # 挂载dist文件夹到容器的/dist目录
+      - ./logs/nginx:/var/log/nginx:rw  # Nginx日志
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:3001
+    networks:
+      - novablog-production-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Database (optional - if using external database)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: novablog-production-db
+  #   environment:
+  #     - POSTGRES_DB=novablog
+  #     - POSTGRES_USER=novablog
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - novablog-production-network
+  #   restart: unless-stopped
+
+  # Redis Cache (optional)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: novablog-production-redis
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - novablog-production-network
+  #   restart: unless-stopped
+
+networks:
+  novablog-production-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
+
+volumes:
+  # Persistent volumes for data
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data
+  uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../uploads
+  # postgres_data:
+  #   driver: local
+  # redis_data:
+  #   driver: local
