@@ -9,9 +9,9 @@ NC='\033[0m'
 
 REPO_URL="https://github.com/tangtianshuo/NovaBlog.git"
 BRANCH="release"
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.production.yml}"
-APP_DIR="${APP_DIR:-/opt/novablog}"
-BACKUP_DIR="${BACKUP_DIR:-/opt/novablog_backups}"
+COMPOSE_FILE="docker-compose.production.yml"
+APP_DIR="/home/root123/docker/NovaBlog/"
+BACKUP_DIR="/home/root123/docker/NovaBlog/"
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
