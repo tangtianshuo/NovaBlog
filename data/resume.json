@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "id": "969f296e-eec9-4dc1-b566-7b7beffa0635",
+    "name": "唐天硕",
+    "title": "",
+    "email": "1034524076@qq.com",
+    "phone": "18851772903",
+    "location": "张家港市",
+    "website": "",
+    "github": "",
+    "linkedin": "",
+    "summary": "",
+    "skills": [],
+    "createdAt": "2026-02-27T12:15:42.515Z",
+    "updatedAt": "2026-02-27T12:15:42.515Z"
+  },
+  "content": {
+    "education": [
+      {
+        "id": "0zzjb18d9ca",
+        "school": "",
+        "degree": "",
+        "major": "",
+        "startDate": "",
+        "endDate": "",
+        "description": ""
+      }
+    ],
+    "experience": [
+      {
+        "id": "3ijs0wcbmyt",
+        "company": "",
+        "position": "",
+        "location": "",
+        "startDate": "",
+        "endDate": "",
+        "description": ""
+      }
+    ],
+    "projects": [],
+    "certifications": [],
+    "awards": []
+  }
+}
