@@ -1,6 +1,7 @@
 {
 	"nav": {
 		"home": "HOME",
+		"collections": "COLLECTIONS",
 		"projects": "PROJECTS",
 		"docs": "DOCS",
 		"editor": "EDITOR",
@@ -14,6 +15,8 @@
 		"subtitle": "> INITIALIZING SYSTEM... WELCOME USER",
 		"viewProjects": "VIEW PROJECTS",
 		"readDocs": "READ DOCS",
+		"resume": "RESUME",
+		"collections": "COLLECTIONS",
 		"projectArchive": "PROJECT_ARCHIVE",
 		"dataLogs": "DATA_LOGS",
 		"loading": "LOADING DATA...",
@@ -37,8 +40,12 @@
 		"title": "ADMIN_DASHBOARD",
 		"documents": "DOCUMENTS",
 		"projects": "PROJECTS",
+		"collections": "COLLECTIONS",
 		"createProject": "CREATE_PROJECT",
+		"createCollection": "CREATE_COLLECTION",
+		"editCollection": "EDIT_COLLECTION",
 		"noProjects": "NO PROJECTS FOUND",
+		"noCollections": "NO COLLECTIONS FOUND",
 		"table": {
 			"title": "TITLE",
 			"status": "STATUS",
@@ -104,7 +111,16 @@
 		"status": {
 			"draft": "DRAFT",
 			"published": "PUBLISHED"
-		}
+		},
+		"articles": "Articles",
+		"readMore": "READ MORE",
+		"saving": "SAVING..."
+	},
+	"collections": {
+		"title": "COLLECTIONS",
+		"contents": "CONTENTS",
+		"noData": "NO COLLECTIONS FOUND",
+		"noArticles": "NO ARTICLES IN THIS COLLECTION"
 	},
 	"projects": {
 		"neonGenesis": {
@@ -133,6 +149,7 @@
 		"exportError": "Failed to export",
 		"previewMode": "PREVIEW",
 		"editMode": "EDIT",
+		"readOnly": "READ ONLY",
 		"tabBasic": "BASIC_INFO",
 		"tabExperience": "EXPERIENCE",
 		"tabEducation": "EDUCATION",

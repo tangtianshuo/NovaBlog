@@ -14,6 +14,7 @@ import { fileURLToPath } from "url"
 import authRoutes from "./routes/auth.js"
 import documentsRoutes from "./routes/documents.js"
 import projectsRoutes from "./routes/projects.js"
+import collectionsRoutes from "./routes/collections.js"
 import uploadRoutes from "./routes/upload.js"
 import resumeRoutes from "./routes/resume.js"
 
@@ -40,6 +41,7 @@ app.use("/uploads", express.static(path.join(rootDir, "uploads")))
 app.use("/api/auth", authRoutes)
 app.use("/api/documents", documentsRoutes)
 app.use("/api/projects", projectsRoutes)
+app.use("/api/collections", collectionsRoutes)
 app.use("/api/upload", uploadRoutes)
 app.use("/api/resume", resumeRoutes)
 

@@ -6,6 +6,9 @@ import Login from "@/pages/Login.vue"
 import Editor from "@/pages/Editor.vue"
 import Admin from "@/pages/Admin.vue"
 import ResumeEditor from "@/pages/ResumeEditor.vue"
+import Collections from "@/pages/Collections.vue"
+import CollectionDetail from "@/pages/CollectionDetail.vue"
+import CollectionEditor from "@/pages/CollectionEditor.vue"
 import { useAuthStore } from "@/stores/auth"
 
 // Define route configuration
@@ -55,6 +58,18 @@ const routes = [
 		meta: { requiresAuth: true },
 	},
 	{
+		path: "/editor/collection",
+		name: "collection-create",
+		component: CollectionEditor,
+		meta: { requiresAuth: true },
+	},
+	{
+		path: "/editor/collection/:id",
+		name: "collection-editor",
+		component: CollectionEditor,
+		meta: { requiresAuth: true },
+	},
+	{
 		path: "/admin",
 		name: "admin",
 		component: Admin,
@@ -64,7 +79,16 @@ const routes = [
 		path: "/resume",
 		name: "resume",
 		component: ResumeEditor,
-		meta: { requiresAuth: true },
+	},
+	{
+		path: "/collections",
+		name: "collections",
+		component: Collections,
+	},
+	{
+		path: "/collection/:id",
+		name: "collection-detail",
+		component: CollectionDetail,
 	},
 ]
 

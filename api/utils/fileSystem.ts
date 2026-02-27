@@ -7,6 +7,8 @@ import type {
 	User,
 	Project,
 	ProjectMetadata,
+	Collection,
+	CollectionMetadata,
 	Resume,
 	ResumeMetadata,
 } from "../types.js"
@@ -14,6 +16,7 @@ import type {
 const DATA_DIR = path.resolve(process.cwd(), "data")
 const DOCUMENTS_DIR = path.join(DATA_DIR, "documents")
 const PROJECTS_DIR = path.join(DATA_DIR, "projects")
+const COLLECTIONS_DIR = path.join(DATA_DIR, "collections")
 const USERS_FILE = path.join(DATA_DIR, "users.json")
 const RESUME_FILE = path.join(DATA_DIR, "resume.json")
 
@@ -325,6 +328,107 @@ export const fileSystem = {
 			}
 		} catch (error) {
 			console.error("Error deleting project:", error)
+		}
+	},
+
+	// Collections
+	async getCollections(): Promise<CollectionMetadata[]> {
+		try {
+			const entries = await fs.readdir(COLLECTIONS_DIR, { withFileTypes: true })
+			const collections: CollectionMetadata[] = []
+
+			for (const entry of entries) {
+				if (entry.isDirectory()) {
+					const collectionPath = path.join(COLLECTIONS_DIR, entry.name)
+					const indexPath = path.join(collectionPath, "index.md")
+
+					try {
+						const fileContent = await fs.readFile(indexPath, "utf-8")
+						const { data } = matter(fileContent)
+						if (data.id) {
+							collections.push(data as CollectionMetadata)
+						}
+					} catch (error) {
+						// Skip if no index.md
+					}
+				}
+			}
+
+			return collections.sort(
+				(a, b) =>
+					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+			)
+		} catch (error) {
+			return []
+		}
+	},
+
+	async getCollection(id: string): Promise<Collection | null> {
+		try {
+			const entries = await fs.readdir(COLLECTIONS_DIR, { withFileTypes: true })
+
+			for (const entry of entries) {
+				if (entry.isDirectory()) {
+					const collectionPath = path.join(COLLECTIONS_DIR, entry.name)
+					const indexPath = path.join(collectionPath, "index.md")
+
+					try {
+						const fileContent = await fs.readFile(indexPath, "utf-8")
+						const { data, content } = matter(fileContent)
+						if (data.id === id) {
+							return {
+								metadata: data as CollectionMetadata,
+								content,
+							}
+						}
+					} catch {}
+				}
+			}
+			return null
+		} catch (error) {
+			return null
+		}
+	},
+
+	async saveCollection(collection: Collection): Promise<void> {
+		const { metadata, content } = collection
+
+		const cleanMetadata: Record<string, any> = {}
+		for (const [key, value] of Object.entries(metadata)) {
+			if (value !== undefined && value !== null && value !== "") {
+				cleanMetadata[key] = value
+			}
+		}
+
+		const fileContent = matter.stringify(content, cleanMetadata)
+		const folderName = sanitizeName(metadata.slug || metadata.title)
+		const targetFolder = path.join(COLLECTIONS_DIR, folderName)
+
+		await fs.mkdir(targetFolder, { recursive: true })
+		await fs.writeFile(path.join(targetFolder, "index.md"), fileContent)
+	},
+
+	async deleteCollection(id: string): Promise<void> {
+		try {
+			const entries = await fs.readdir(COLLECTIONS_DIR, { withFileTypes: true })
+
+			for (const entry of entries) {
+				if (entry.isDirectory()) {
+					const collectionPath = path.join(COLLECTIONS_DIR, entry.name)
+					const indexPath = path.join(collectionPath, "index.md")
+
+					try {
+						const fileContent = await fs.readFile(indexPath, "utf-8")
+						const { data } = matter(fileContent)
+						if (data.id === id) {
+							await fs.rm(collectionPath, { recursive: true, force: true })
+							return
+						}
+					} catch {}
+				}
+			}
+		} catch (error) {
+			console.error("Error deleting collection:", error)
 		}
 	},
 

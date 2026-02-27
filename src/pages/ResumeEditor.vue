@@ -96,11 +96,13 @@
 	const { t } = useI18n()
 	const { success, error } = useCyberToast()
 
+	const isAuthenticated = computed(() => authStore.isAuthenticated)
+
 	const loading = ref(false)
 	const saving = ref(false)
 	const exporting = ref(false)
 	const activeTab = ref("basic")
-	const previewMode = ref(false)
+	const previewMode = ref(!authStore.isAuthenticated)
 
 	const metadata = ref<ResumeMetadata>({
 		id: "",
@@ -493,7 +495,7 @@
 
 <template>
 	<div class="flex h-screen bg-cyber-dark text-white pt-16 overflow-hidden">
-		<aside class="w-64 border-r border-cyber-primary flex flex-col bg-black bg-opacity-50 flex-shrink-0">
+		<aside v-if="isAuthenticated" class="w-64 border-r border-cyber-primary flex flex-col bg-black bg-opacity-50 flex-shrink-0">
 			<div class="p-4 border-b border-cyber-primary">
 				<h2 class="font-mono text-cyber-neon font-bold">{{ t("resume.title") }}</h2>
 			</div>
@@ -513,42 +515,49 @@
 
 		<main class="flex-1 flex flex-col min-w-0 overflow-hidden">
 			<div class="border-b px-4 py-2 flex items-center justify-between bg-cyber-neon bg-opacity-20 border-cyber-neon">
-				<span class="text-xs font-mono font-bold text-cyber-neon">RESUME EDITOR</span>
+				<span class="text-xs font-mono font-bold text-cyber-neon">{{ isAuthenticated ? 'RESUME EDITOR' : 'MY RESUME' }}</span>
 				<div class="flex items-center gap-2">
-					<button
-						@click="previewMode = !previewMode"
-						class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono rounded transition-all"
-						:class="previewMode ? 'bg-cyber-pink text-black' : 'bg-cyber-dark border border-cyber-pink text-cyber-pink hover:bg-cyber-pink hover:text-black'"
-					>
-						<component :is="previewMode ? EyeOff : Eye" class="w-4 h-4" />
-						{{ previewMode ? t("resume.editMode") : t("resume.previewMode") }}
-					</button>
-					<button
-						@click="saveResume"
-						:disabled="saving"
-						class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-pink text-cyber-pink rounded hover:bg-cyber-pink hover:text-black transition-all"
-					>
-						<Save class="w-4 h-4" />
-						{{ saving ? t("resume.saving") : t("resume.save") }}
-					</button>
-					<button
-						@click="exportToPdf"
-						:disabled="exporting"
-						class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-green text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all"
-					>
-						<Download class="w-4 h-4" />
-						{{ exporting ? t("resume.exporting") : t("resume.exportPdf") }}
-					</button>
+					<template v-if="isAuthenticated">
+						<button
+							@click="previewMode = !previewMode"
+							class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono rounded transition-all"
+							:class="previewMode ? 'bg-cyber-pink text-black' : 'bg-cyber-dark border border-cyber-pink text-cyber-pink hover:bg-cyber-pink hover:text-black'"
+						>
+							<component :is="previewMode ? EyeOff : Eye" class="w-4 h-4" />
+							{{ previewMode ? t("resume.editMode") : t("resume.previewMode") }}
+						</button>
+						<button
+							@click="saveResume"
+							:disabled="saving"
+							class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-pink text-cyber-pink rounded hover:bg-cyber-pink hover:text-black transition-all"
+						>
+							<Save class="w-4 h-4" />
+							{{ saving ? t("resume.saving") : t("resume.save") }}
+						</button>
+						<button
+							@click="exportToPdf"
+							:disabled="exporting"
+							class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-green text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all"
+						>
+							<Download class="w-4 h-4" />
+							{{ exporting ? t("resume.exporting") : t("resume.exportPdf") }}
+						</button>
+					</template>
+					<template v-else>
+						<span class="text-xs font-mono text-cyber-green border border-cyber-green px-2 py-1 rounded">{{ t('resume.readOnly') || 'Read Only' }}</span>
+					</template>
 				</div>
 			</div>
 
 			<div class="flex-1 overflow-y-auto p-6" v-if="!loading">
-				<div v-if="previewMode" class="max-w-4xl mx-auto bg-white text-gray-900 p-8 rounded shadow-lg">
-					<div id="resume-preview">
-						<header class="text-center border-b-2 border-gray-300 pb-4 mb-6">
-							<h1 class="text-3xl font-bold text-gray-900">{{ metadata.name || "Your Name" }}</h1>
-							<p class="text-xl text-gray-600 mt-1">{{ metadata.title || "Professional Title" }}</p>
-							<div class="flex flex-wrap justify-center gap-4 mt-3 text-sm text-gray-600">
+				<div v-if="previewMode" class="max-w-4xl mx-auto bg-cyber-dark border border-cyber-neon p-8 rounded-lg shadow-lg shadow-cyber-neon/20 relative overflow-hidden">
+				<div class="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+				<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyber-neon via-cyber-primary to-cyber-neon opacity-50"></div>
+				<div id="resume-preview" class="relative z-10">
+					<header class="text-center border-b-2 border-cyber-neon pb-4 mb-6">
+						<h1 class="text-3xl font-bold text-cyber-neon drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">{{ metadata.name || "Your Name" }}</h1>
+						<p class="text-xl text-cyber-primary mt-1">{{ metadata.title || "Professional Title" }}</p>
+						<div class="flex flex-wrap justify-center gap-4 mt-3 text-sm text-cyber-green">
 								<span v-if="metadata.email" class="flex items-center gap-1">
 									<Mail class="w-4 h-4" /> {{ metadata.email }}
 								</span>
@@ -571,17 +580,17 @@
 						</header>
 
 						<section v-if="metadata.summary" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Summary</h2>
-							<p class="text-gray-700 whitespace-pre-line">{{ metadata.summary }}</p>
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Summary</h2>
+							<p class="text-gray-300 whitespace-pre-line">{{ metadata.summary }}</p>
 						</section>
 
 						<section v-if="skillsArray.length > 0" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Skills</h2>
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Skills</h2>
 							<div class="flex flex-wrap gap-2">
 								<span
 									v-for="skill in skillsArray"
 									:key="skill"
-									class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded"
+									class="px-3 py-1 bg-cyber-dark border border-cyber-primary text-cyber-neon text-sm rounded font-mono"
 								>
 									{{ skill }}
 								</span>
@@ -589,58 +598,58 @@
 						</section>
 
 						<section v-if="content.experience.length > 0" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Experience</h2>
-							<div v-for="exp in content.experience" :key="exp.id" class="mb-4">
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Experience</h2>
+							<div v-for="exp in content.experience" :key="exp.id" class="mb-4 pl-3 border-l-2 border-cyber-primary">
 								<div class="flex justify-between items-start">
 									<div>
-										<h3 class="font-semibold text-gray-900">{{ exp.position }}</h3>
-										<p class="text-gray-600">{{ exp.company }} <span v-if="exp.location">- {{ exp.location }}</span></p>
+										<h3 class="font-semibold text-cyber-neon">{{ exp.position }}</h3>
+										<p class="text-cyber-primary">{{ exp.company }} <span v-if="exp.location">- {{ exp.location }}</span></p>
 									</div>
-									<span class="text-sm text-gray-500">{{ exp.startDate }} - {{ exp.endDate || "Present" }}</span>
+									<span class="text-sm text-cyber-green font-mono">{{ exp.startDate }} - {{ exp.endDate || "Present" }}</span>
 								</div>
-								<p class="text-gray-700 mt-1 whitespace-pre-line">{{ exp.description }}</p>
+								<p class="text-gray-300 mt-2 whitespace-pre-line">{{ exp.description }}</p>
 							</div>
 						</section>
 
 						<section v-if="content.education.length > 0" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Education</h2>
-							<div v-for="edu in content.education" :key="edu.id" class="mb-4">
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Education</h2>
+							<div v-for="edu in content.education" :key="edu.id" class="mb-4 pl-3 border-l-2 border-cyber-primary">
 								<div class="flex justify-between items-start">
 									<div>
-										<h3 class="font-semibold text-gray-900">{{ edu.school }}</h3>
-										<p class="text-gray-600">{{ edu.degree }} in {{ edu.major }}</p>
+										<h3 class="font-semibold text-cyber-neon">{{ edu.school }}</h3>
+										<p class="text-cyber-primary">{{ edu.degree }} in {{ edu.major }}</p>
 									</div>
-									<span class="text-sm text-gray-500">{{ edu.startDate }} - {{ edu.endDate || "Present" }}</span>
+									<span class="text-sm text-cyber-green font-mono">{{ edu.startDate }} - {{ edu.endDate || "Present" }}</span>
 								</div>
-								<p class="text-gray-700 mt-1 whitespace-pre-line">{{ edu.description }}</p>
+								<p class="text-gray-300 mt-2 whitespace-pre-line">{{ edu.description }}</p>
 							</div>
 						</section>
 
 						<section v-if="content.projects.length > 0" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Projects</h2>
-							<div v-for="proj in content.projects" :key="proj.id" class="mb-4">
-								<h3 class="font-semibold text-gray-900">
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Projects</h2>
+							<div v-for="proj in content.projects" :key="proj.id" class="mb-4 pl-3 border-l-2 border-cyber-pink">
+								<h3 class="font-semibold text-cyber-pink">
 									{{ proj.name }}
-									<span v-if="proj.link" class="text-blue-600 text-sm font-normal"> - {{ proj.link }}</span>
+									<span v-if="proj.link" class="text-cyber-neon text-sm font-normal"> - {{ proj.link }}</span>
 								</h3>
-								<p class="text-gray-700 mt-1">{{ proj.description }}</p>
-								<p v-if="proj.technologies" class="text-gray-500 text-sm mt-1">Technologies: {{ proj.technologies }}</p>
+								<p class="text-gray-300 mt-1">{{ proj.description }}</p>
+								<p v-if="proj.technologies" class="text-cyber-green text-sm mt-1 font-mono">Technologies: {{ proj.technologies }}</p>
 							</div>
 						</section>
 
 						<section v-if="content.certifications.length > 0" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Certifications</h2>
-							<div v-for="cert in content.certifications" :key="cert.id" class="mb-2 flex justify-between">
-								<span class="text-gray-900">{{ cert.name }}</span>
-								<span class="text-gray-500">{{ cert.issuer }} - {{ cert.date }}</span>
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Certifications</h2>
+							<div v-for="cert in content.certifications" :key="cert.id" class="mb-2 pl-3 border-l-2 border-cyber-green flex justify-between">
+								<span class="text-cyber-neon">{{ cert.name }}</span>
+								<span class="text-cyber-primary">{{ cert.issuer }} - {{ cert.date }}</span>
 							</div>
 						</section>
 
 						<section v-if="content.awards.length > 0" class="mb-6">
-							<h2 class="text-lg font-bold border-b border-gray-300 pb-1 mb-3">Awards</h2>
-							<div v-for="award in content.awards" :key="award.id" class="mb-2 flex justify-between">
-								<span class="text-gray-900">{{ award.name }}</span>
-								<span class="text-gray-500">{{ award.issuer }} - {{ award.date }}</span>
+							<h2 class="text-lg font-bold border-b border-cyber-neon pb-1 mb-3 text-cyber-neon font-mono">Awards</h2>
+							<div v-for="award in content.awards" :key="award.id" class="mb-2 pl-3 border-l-2 border-cyber-yellow flex justify-between">
+								<span class="text-cyber-neon">{{ award.name }}</span>
+								<span class="text-cyber-primary">{{ award.issuer }} - {{ award.date }}</span>
 							</div>
 						</section>
 					</div>

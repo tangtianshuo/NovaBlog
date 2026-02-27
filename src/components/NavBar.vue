@@ -28,6 +28,7 @@ const toggleLanguage = () => {
       
       <div class="flex items-center space-x-6">
         <router-link to="/" class="text-gray-400 hover:text-cyber-neon transition-colors font-mono text-sm">{{ t('nav.home') }}</router-link>
+        <router-link to="/collections" class="text-gray-400 hover:text-cyber-neon transition-colors font-mono text-sm">{{ t('nav.collections') }}</router-link>
         <router-link to="/#projects" class="text-gray-400 hover:text-cyber-neon transition-colors font-mono text-sm">{{ t('nav.projects') }}</router-link>
         <router-link to="/#blog" class="text-gray-400 hover:text-cyber-neon transition-colors font-mono text-sm">{{ t('nav.docs') }}</router-link>
 

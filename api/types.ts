@@ -43,6 +43,22 @@ export interface ProjectMetadata {
 	updatedAt: string
 }
 
+export interface Collection {
+	metadata: CollectionMetadata
+	content: string
+}
+
+export interface CollectionMetadata {
+	id: string
+	title: string
+	slug: string
+	description: string
+	coverImage?: string
+	articles: string[] // List of document IDs
+	createdAt: string
+	updatedAt: string
+}
+
 export interface Resume {
 	metadata: ResumeMetadata
 	content: ResumeContent

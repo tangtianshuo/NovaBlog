@@ -17,6 +17,7 @@ export default {
 					green: "#39ff14", // Fluorescent Green
 					dark: "#0d0d0d", // Dark Gray
 					pink: "#ff1493", // Bright Pink
+					yellow: "#ffff00", // Neon Yellow
 				},
 			},
 			fontFamily: {

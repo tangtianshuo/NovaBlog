@@ -2,13 +2,21 @@
 	import { ref, onMounted, watch } from "vue"
 	import { useAuthStore } from "@/stores/auth"
 	import { useCyberToast } from "@/composables/useCyberToast"
-	import { Edit, Trash2, ExternalLink, FileText, Folder } from "lucide-vue-next"
+	import {
+		Edit,
+		Trash2,
+		ExternalLink,
+		FileText,
+		Folder,
+		Layers,
+	} from "lucide-vue-next"
 	import { useRouter, useRoute } from "vue-router"
 	import type { DocumentMetadata } from "../../api/types"
 	import { useI18n } from "vue-i18n"
 	import { apiFetch } from "@/utils/api"
 	import ConfirmDialog from "@/components/ConfirmDialog.vue"
 	import ProjectManager from "@/components/ProjectManager.vue"
+	import CollectionManager from "@/components/CollectionManager.vue"
 
 	const authStore = useAuthStore()
 	const router = useRouter()
@@ -19,7 +27,7 @@
 	const showDeleteDialog = ref(false)
 	const docToDelete = ref<string | null>(null)
 	const { success, error, danger } = useCyberToast()
-	const activeTab = ref<"documents" | "projects">("documents")
+	const activeTab = ref<"documents" | "projects" | "collections">("documents")
 
 	const fetchDocuments = async () => {
 		loading.value = true
@@ -129,6 +137,18 @@
 					<Folder class="w-5 h-5" />
 					<span>{{ t("admin.projects") }}</span>
 				</button>
+				<button
+					@click="activeTab = 'collections'"
+					class="flex items-center gap-2 px-6 py-3 border-2 rounded font-mono transition-all"
+					:class="
+						activeTab === 'collections'
+							? 'border-cyber-green text-cyber-green bg-cyber-green bg-opacity-10'
+							: 'border-gray-700 text-gray-500 hover:border-cyber-green hover:text-cyber-green'
+					"
+				>
+					<Layers class="w-5 h-5" />
+					<span>{{ t("admin.collections") }}</span>
+				</button>
 			</div>
 
 			<!-- Documents Tab -->
@@ -223,6 +243,9 @@
 
 			<!-- Projects Tab -->
 			<ProjectManager v-if="activeTab === 'projects'" />
+
+			<!-- Collections Tab -->
+			<CollectionManager v-if="activeTab === 'collections'" />
 		</div>
 
 		<ConfirmDialog

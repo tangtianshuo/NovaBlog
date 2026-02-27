@@ -1,6 +1,7 @@
 {
 	"nav": {
 		"home": "首页",
+		"collections": "合集",
 		"projects": "项目",
 		"docs": "文档",
 		"editor": "编辑器",
@@ -14,8 +15,10 @@
 		"subtitle": "> 系统初始化... 欢迎用户",
 		"viewProjects": "查看项目",
 		"readDocs": "阅读文档",
+		"collections": "合集展示",
 		"projectArchive": "项目归档",
 		"dataLogs": "数据日志",
+		"resume": "我的简历",
 		"loading": "数据加载中...",
 		"noData": "未发现数据",
 		"footer": "系统状态：在线 | © 2026 新星博客"
@@ -37,8 +40,12 @@
 		"title": "管理仪表盘",
 		"documents": "文档管理",
 		"projects": "项目管理",
+		"collections": "合集管理",
 		"createProject": "创建项目",
+		"createCollection": "创建合集",
+		"editCollection": "编辑合集",
 		"noProjects": "暂无项目",
+		"noCollections": "暂无合集",
 		"table": {
 			"title": "标题",
 			"status": "状态",
@@ -104,7 +111,16 @@
 		"status": {
 			"draft": "草稿",
 			"published": "已发布"
-		}
+		},
+		"articles": "文章",
+		"readMore": "阅读更多",
+		"saving": "保存中..."
+	},
+	"collections": {
+		"title": "合集",
+		"contents": "目录",
+		"noData": "暂无合集",
+		"noArticles": "此合集暂无文章"
 	},
 	"projects": {
 		"neonGenesis": {
@@ -133,6 +149,7 @@
 		"exportError": "导出失败",
 		"previewMode": "预览模式",
 		"editMode": "编辑模式",
+		"readOnly": "只读",
 		"tabBasic": "基本信息",
 		"tabExperience": "工作经历",
 		"tabEducation": "教育背景",
