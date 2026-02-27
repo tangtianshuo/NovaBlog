@@ -45,7 +45,7 @@ services:
     ports:
       - "19088:80"  # Nginx使用80端口，映射到宿主机的19088
     volumes:
-      - ../dist:/dist:ro  # 挂载dist文件夹到容器的/dist目录
+      # - ../dist:/dist:ro  # 注释掉：不再挂载宿主机 dist，使用容器内构建的文件
       - ./logs/nginx:/var/log/nginx:rw  # Nginx日志
     depends_on:
       - backend
