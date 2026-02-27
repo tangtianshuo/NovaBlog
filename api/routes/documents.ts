@@ -1,10 +1,26 @@
 import { Router, type Request, type Response } from "express"
 import { fileSystem } from "../utils/fileSystem.js"
+import { createOrUpdateFile, generateCommitMessage } from "../utils/githubSync.js"
 import { authenticateToken } from "./auth.js"
 import type { Document, DocumentMetadata } from "../types.js"
+import matter from "gray-matter"
 import crypto from "crypto"
+import path from "path"
 
 const router = Router()
+
+function getDocumentPath(doc: Document): string {
+	const statusDir = doc.metadata.status
+	const folderName = doc.metadata.title
+		.toLowerCase()
+		.replace(/\s+/g, "-")
+		.replace(/[^\w-]/g, "")
+	let targetFolder = path.join(statusDir, folderName)
+	if (doc.metadata.category) {
+		targetFolder = path.join(statusDir, doc.metadata.category, folderName)
+	}
+	return path.join("data", "documents", targetFolder, "index.md")
+}
 
 // Get list of documents
 router.get("/", async (req: Request, res: Response): Promise<void> => {
@@ -79,7 +95,23 @@ router.post(
 			}
 
 			await fileSystem.saveDocument(newDoc)
-			res.json({ success: true, data: newDoc })
+
+			const filePath = getDocumentPath(newDoc)
+			const cleanMetadata: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(newDoc.metadata)) {
+				if (value !== undefined && value !== null && value !== "") {
+					cleanMetadata[key] = value
+				}
+			}
+			const fileContent = matter.stringify(newDoc.content, cleanMetadata)
+
+			await createOrUpdateFile({
+				path: filePath,
+				content: fileContent,
+				message: generateCommitMessage("create", "document", newDoc.metadata.title),
+			})
+
+			res.json({ success: true, data: newDoc, synced: true })
 		} catch (error) {
 			console.error("Error creating document:", error)
 			res
@@ -132,7 +164,23 @@ router.put(
 			}
 
 			await fileSystem.saveDocument(updatedDoc)
-			res.json({ success: true, data: updatedDoc })
+
+			const filePath = getDocumentPath(updatedDoc)
+			const cleanMetadata: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(updatedDoc.metadata)) {
+				if (value !== undefined && value !== null && value !== "") {
+					cleanMetadata[key] = value
+				}
+			}
+			const fileContent = matter.stringify(updatedDoc.content, cleanMetadata)
+
+			await createOrUpdateFile({
+				path: filePath,
+				content: fileContent,
+				message: generateCommitMessage("update", "document", updatedDoc.metadata.title),
+			})
+
+			res.json({ success: true, data: updatedDoc, synced: true })
 		} catch (error) {
 			console.error("Error updating document:", error)
 			res

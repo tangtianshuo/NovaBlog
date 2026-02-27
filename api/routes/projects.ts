@@ -1,12 +1,23 @@
 import { Router, type Request, type Response } from "express"
 import { fileSystem } from "../utils/fileSystem.js"
+import { createOrUpdateFile, generateCommitMessage } from "../utils/githubSync.js"
 import { authenticateToken } from "./auth.js"
 import type { Project, ProjectMetadata } from "../types.js"
+import matter from "gray-matter"
 import crypto from "crypto"
+import path from "path"
 
 const router = Router()
 
 const DEFAULT_PROJECT_IMAGE = "/images/default-project.png"
+
+function getProjectPath(project: Project): string {
+	const folderName = (project.metadata.slug || project.metadata.title)
+		.toLowerCase()
+		.replace(/\s+/g, "-")
+		.replace(/[^\w-]/g, "")
+	return path.join("data", "projects", folderName, "index.md")
+}
 
 const PROJECTS_DIR = process.env.PROJECTS_DIR || "data/projects"
 
@@ -88,7 +99,23 @@ router.post(
 			}
 
 			await fileSystem.saveProject(newProject)
-			res.json({ success: true, data: newProject })
+
+			const filePath = getProjectPath(newProject)
+			const cleanMetadata: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(newProject.metadata)) {
+				if (value !== undefined && value !== null && value !== "") {
+					cleanMetadata[key] = value
+				}
+			}
+			const fileContent = matter.stringify(newProject.content, cleanMetadata)
+
+			await createOrUpdateFile({
+				path: filePath,
+				content: fileContent,
+				message: generateCommitMessage("create", "project", newProject.metadata.title),
+			})
+
+			res.json({ success: true, data: newProject, synced: true })
 		} catch (error) {
 			console.error("Error creating project:", error)
 			res.status(500).json({ success: false, error: "Failed to create project" })
@@ -127,7 +154,23 @@ router.put(
 			}
 
 			await fileSystem.saveProject(updatedProject)
-			res.json({ success: true, data: updatedProject })
+
+			const filePath = getProjectPath(updatedProject)
+			const cleanMetadata: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(updatedProject.metadata)) {
+				if (value !== undefined && value !== null && value !== "") {
+					cleanMetadata[key] = value
+				}
+			}
+			const fileContent = matter.stringify(updatedProject.content, cleanMetadata)
+
+			await createOrUpdateFile({
+				path: filePath,
+				content: fileContent,
+				message: generateCommitMessage("update", "project", updatedProject.metadata.title),
+			})
+
+			res.json({ success: true, data: updatedProject, synced: true })
 		} catch (error) {
 			console.error("Error updating project:", error)
 			res.status(500).json({ success: false, error: "Failed to update project" })

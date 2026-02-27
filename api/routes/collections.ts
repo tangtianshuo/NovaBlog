@@ -1,10 +1,21 @@
 import { Router, type Request, type Response } from "express"
 import { fileSystem } from "../utils/fileSystem.js"
+import { createOrUpdateFile, generateCommitMessage } from "../utils/githubSync.js"
 import { authenticateToken } from "./auth.js"
 import type { Collection } from "../types.js"
+import matter from "gray-matter"
 import crypto from "crypto"
+import path from "path"
 
 const router = Router()
+
+function getCollectionPath(collection: Collection): string {
+	const folderName = (collection.metadata.slug || collection.metadata.title)
+		.toLowerCase()
+		.replace(/\s+/g, "-")
+		.replace(/[^\w-]/g, "")
+	return path.join("data", "collections", folderName, "index.md")
+}
 
 // API Routes for Collections
 
@@ -69,7 +80,23 @@ router.post(
 			}
 
 			await fileSystem.saveCollection(newCollection)
-			res.json({ success: true, data: newCollection })
+
+			const filePath = getCollectionPath(newCollection)
+			const cleanMetadata: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(newCollection.metadata)) {
+				if (value !== undefined && value !== null && value !== "") {
+					cleanMetadata[key] = value
+				}
+			}
+			const fileContent = matter.stringify(newCollection.content, cleanMetadata)
+
+			await createOrUpdateFile({
+				path: filePath,
+				content: fileContent,
+				message: generateCommitMessage("create", "collection", newCollection.metadata.title),
+			})
+
+			res.json({ success: true, data: newCollection, synced: true })
 		} catch (error) {
 			console.error("Error creating collection:", error)
 			res.status(500).json({ success: false, error: "Failed to create collection" })
@@ -108,7 +135,23 @@ router.put(
 			}
 
 			await fileSystem.saveCollection(updatedCollection)
-			res.json({ success: true, data: updatedCollection })
+
+			const filePath = getCollectionPath(updatedCollection)
+			const cleanMetadata: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(updatedCollection.metadata)) {
+				if (value !== undefined && value !== null && value !== "") {
+					cleanMetadata[key] = value
+				}
+			}
+			const fileContent = matter.stringify(updatedCollection.content, cleanMetadata)
+
+			await createOrUpdateFile({
+				path: filePath,
+				content: fileContent,
+				message: generateCommitMessage("update", "collection", updatedCollection.metadata.title),
+			})
+
+			res.json({ success: true, data: updatedCollection, synced: true })
 		} catch (error) {
 			console.error("Error updating collection:", error)
 			res.status(500).json({ success: false, error: "Failed to update collection" })
