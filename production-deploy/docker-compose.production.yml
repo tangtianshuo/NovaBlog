@@ -40,8 +40,8 @@ services:
       context: ../ # 构建上下文为项目根目录
       dockerfile: production-deploy/Dockerfile.frontend.nginx
       args:
-        VITE_BASE_PATH: /nova/ # 修改这里：将 / 改为你的服务名，例如 /nova/，必须以 / 结尾
-        VITE_API_BASE: /api
+        VITE_BASE_PATH: /nova/ # 前端资源基础路径
+        VITE_API_BASE: /nova/api # API 基础路径（需要带 nova）
     container_name: novablog-production-frontend
     ports:
       - "19088:80" # Nginx使用80端口，映射到宿主机的19088

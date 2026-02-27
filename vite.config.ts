@@ -5,6 +5,7 @@ import Inspector from "unplugin-vue-dev-locator/vite"
 
 const apiUrl = process.env.VITE_API_URL || "http://localhost:3001"
 const basePath = process.env.VITE_BASE_PATH || "/"
+const apiBase = process.env.VITE_API_BASE || "/api"
 const isProduction = process.env.NODE_ENV === "production"
 
 export default defineConfig({
@@ -12,6 +13,9 @@ export default defineConfig({
 		sourcemap: "hidden",
 	},
 	base: basePath,
+	define: {
+		"import.meta.env.VITE_API_BASE": JSON.stringify(apiBase),
+	},
 	plugins: [vue(), Inspector()],
 	resolve: {
 		alias: {
