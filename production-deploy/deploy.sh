@@ -112,11 +112,10 @@ update_code() {
         log_success "Repository cloned."
     fi
     
-    # Install dependencies
-    log_info "Installing dependencies..."
-    cd "${PROJECT_DIR}"
-    npm ci --only=production
-    log_success "Dependencies installed."
+    # Install dependencies (已移除，因为 Docker 构建时会自动处理依赖)
+    # 注意：不再需要在宿主机上执行 npm install
+    # 依赖由 Dockerfile 在 Docker 容器内安装
+    log_info "Dependencies will be installed in Docker container during build."
 }
 
 # Build Docker images
