@@ -4,11 +4,11 @@ services:
   # Backend API Service
   backend:
     build:
-      context: ../  # Build from parent directory
+      context: ../ # Build from parent directory
       dockerfile: production-deploy/Dockerfile.backend.production
     container_name: novablog-production-backend
     ports:
-      - "19087:3001"  # Different port to avoid conflict with existing deployment
+      - "19087:3001" # Different port to avoid conflict with existing deployment
     volumes:
       - ../data:/app/data:rw
       - ../uploads:/app/uploads:rw
@@ -22,7 +22,8 @@ services:
       - novablog-production-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
+      test:
+        ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -36,17 +37,17 @@ services:
   # Frontend Web Service (Nginx)
   frontend:
     build:
-      context: ../  # Build from parent directory
+      context: ../ # 构建上下文为项目根目录
       dockerfile: production-deploy/Dockerfile.frontend.nginx
       args:
-        VITE_BASE_PATH: /nova/  # 修改这里：将 / 改为你的服务名，例如 /nova/，必须以 / 结尾
+        VITE_BASE_PATH: /nova/ # 修改这里：将 / 改为你的服务名，例如 /nova/，必须以 / 结尾
         VITE_API_BASE: /api
     container_name: novablog-production-frontend
     ports:
-      - "19088:80"  # Nginx使用80端口，映射到宿主机的19088
+      - "19088:80" # Nginx使用80端口，映射到宿主机的19088
     volumes:
       # - ../dist:/dist:ro  # 注释掉：不再挂载宿主机 dist，使用容器内构建的文件
-      - ./logs/nginx:/var/log/nginx:rw  # Nginx日志
+      - ./logs/nginx:/var/log/nginx:rw # Nginx日志
     depends_on:
       - backend
     environment:
