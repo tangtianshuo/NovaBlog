@@ -16,21 +16,18 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts"
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
     },
     {
-      "src": "/uploads/(.*)",
-      "dest": "/uploads/$1"
+      "source": "/uploads/(.*)",
+      "destination": "/uploads/$1"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!api/|uploads/|assets/|.*\\..*).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
