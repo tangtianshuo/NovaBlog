@@ -41,10 +41,10 @@
 
 		if (!previewRef.value) return
 
-		// Dynamically import mermaid only on client side
-		const mermaid = (await import("mermaid")).default
+		const mermaidModule = await import("mermaid")
+		const mermaid = mermaidModule.default
 
-		mermaid.initialize({
+		await mermaid.initialize({
 			startOnLoad: false,
 			theme: "dark",
 			securityLevel: "loose",
@@ -61,18 +61,14 @@
 				const pre = block.parentElement
 
 				if (pre) {
-					// Create a div for mermaid rendering
+					const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+					const { svg } = await mermaid.render(id, code.trim())
+					
 					const mermaidDiv = document.createElement("div")
 					mermaidDiv.className = "mermaid"
-					mermaidDiv.textContent = code.trim()
+					mermaidDiv.innerHTML = svg
 
-					// Replace the pre element with mermaid div
 					pre.replaceWith(mermaidDiv)
-
-					// Render the diagram
-					const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-					mermaidDiv.id = id
-					await mermaid.run({ nodes: [mermaidDiv] })
 				}
 			} catch (error) {
 				console.error("Mermaid rendering error:", error)

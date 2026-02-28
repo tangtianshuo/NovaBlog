@@ -15,10 +15,29 @@ export default defineConfig(({ mode }) => {
 			sourcemap: "hidden",
 			rollupOptions: {
 				output: {
-					manualChunks: {
-						vendor: ["vue", "vue-router", "pinia", "vue-i18n"],
-						ui: ["ant-design-vue", "lucide-vue-next"],
-						markdown: ["markdown-it", "highlight.js", "mermaid"],
+					manualChunks: (id) => {
+						if (id.includes("node_modules")) {
+							if (
+								id.includes("vue") ||
+								id.includes("pinia") ||
+								id.includes("vue-router") ||
+								id.includes("vue-i18n")
+							) {
+								return "vendor"
+							}
+							if (
+								id.includes("ant-design-vue") ||
+								id.includes("lucide-vue-next")
+							) {
+								return "ui"
+							}
+							if (id.includes("markdown-it") || id.includes("highlight.js")) {
+								return "markdown"
+							}
+							if (id.includes("mermaid")) {
+								return "mermaid"
+							}
+						}
 					},
 				},
 			},
@@ -26,7 +45,9 @@ export default defineConfig(({ mode }) => {
 		base: basePath,
 		define: {
 			"import.meta.env.VITE_API_BASE": JSON.stringify(apiBase),
-			"import.meta.env.VITE_API_URL": JSON.stringify(isProduction ? "" : apiUrl),
+			"import.meta.env.VITE_API_URL": JSON.stringify(
+				isProduction ? "" : apiUrl,
+			),
 		},
 		plugins: [vue(), Inspector()],
 		resolve: {
