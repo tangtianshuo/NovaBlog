@@ -494,7 +494,7 @@
 </script>
 
 <template>
-	<div class="flex h-screen bg-cyber-dark text-white pt-16 overflow-hidden">
+	<div class="flex h-screen bg-cyber-dark text-white pt-24 md:pt-16 overflow-hidden">
 		<aside v-if="isAuthenticated" class="w-64 border-r border-cyber-primary flex flex-col bg-black bg-opacity-50 flex-shrink-0">
 			<div class="p-4 border-b border-cyber-primary">
 				<h2 class="font-mono text-cyber-neon font-bold">{{ t("resume.title") }}</h2>

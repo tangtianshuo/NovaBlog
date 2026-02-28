@@ -43,7 +43,6 @@ dist-ssr
 
 # Project Data & Uploads
 # Ignore sensitive user data (passwords)
-data/users.json
 
 # Ignore temporary uploads
 uploads/*

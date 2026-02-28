@@ -511,7 +511,9 @@
 </script>
 
 <template>
-	<div class="flex h-screen bg-cyber-dark text-white pt-16 overflow-hidden">
+	<div
+		class="flex h-screen bg-cyber-dark text-white pt-24 md:pt-16 overflow-hidden"
+	>
 		<!-- Sidebar - Only show when editing documents -->
 		<aside
 			v-if="!isEditingProject"
@@ -660,7 +662,10 @@
 					/>
 				</div>
 
-				<div v-if="isEditingProject" class="col-span-2 flex flex-col gap-1">
+				<div
+					v-if="isEditingProject"
+					class="col-span-2 flex flex-col gap-1"
+				>
 					<label class="text-xs text-gray-500 font-mono">{{
 						t("editor.label.imageUrl")
 					}}</label>

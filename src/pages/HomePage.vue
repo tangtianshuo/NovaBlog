@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, onMounted, computed } from "vue"
+	import { ref, onMounted } from "vue"
 	import ProjectCard from "@/components/ProjectCard.vue"
 	import DocumentCard from "@/components/DocumentCard.vue"
 	import CollectionCard from "@/components/CollectionCard.vue"
@@ -62,31 +62,31 @@
 
 			<div class="relative z-10 text-center px-4">
 				<h1
-					class="text-5xl md:text-7xl font-bold mb-4 font-mono tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyber-pink via-cyber-neon to-cyber-green animate-pulse"
+					class="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 font-mono tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyber-pink via-cyber-neon to-cyber-green"
 				>
 					{{ t("home.title") }}
 				</h1>
 				<p
-					class="text-xl md:text-2xl text-cyber-neon font-mono mb-8 typing-effect"
+					class="text-base sm:text-xl md:text-2xl text-cyber-neon font-mono mb-6 sm:mb-8 typing-effect"
 				>
 					{{ t("home.subtitle") }}
 				</p>
-				<div class="flex justify-center gap-4">
+				<div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
 					<a
 						href="#projects"
-						class="px-6 py-2 border border-cyber-pink text-cyber-pink hover:bg-cyber-pink hover:text-black transition-all font-mono"
+						class="px-5 py-2 sm:px-6 sm:py-2 border border-cyber-pink text-cyber-pink hover:bg-cyber-pink hover:text-black transition-all font-mono text-sm min-h-[44px] flex items-center justify-center"
 					>
 						{{ t("home.viewProjects") }}
 					</a>
 					<a
 						href="#collections"
-						class="px-6 py-2 border border-cyber-green text-cyber-green hover:bg-cyber-green hover:text-black transition-all font-mono"
+						class="px-5 py-2 sm:px-6 sm:py-2 border border-cyber-green text-cyber-green hover:bg-cyber-green hover:text-black transition-all font-mono text-sm min-h-[44px] flex items-center justify-center"
 					>
 						{{ t("home.collections") }}
 					</a>
 					<a
 						href="#blog"
-						class="px-6 py-2 border border-cyber-neon text-cyber-neon hover:bg-cyber-neon hover:text-black transition-all font-mono"
+						class="px-5 py-2 sm:px-6 sm:py-2 border border-cyber-neon text-cyber-neon hover:bg-cyber-neon hover:text-black transition-all font-mono text-sm min-h-[44px] flex items-center justify-center"
 					>
 						{{ t("home.readDocs") }}
 					</a>
@@ -97,7 +97,7 @@
 		<!-- Projects Section -->
 		<section
 			id="projects"
-			class="py-20 relative overflow-hidden"
+			class="py-12 md:py-20 relative overflow-hidden"
 		>
 			<div
 				class="absolute inset-0 bg-gradient-to-br from-cyber-primary via-black to-black"
@@ -123,7 +123,7 @@
 			</div>
 			<div class="container mx-auto px-4 relative z-10">
 				<h2
-					class="text-3xl font-bold mb-12 text-center text-cyber-neon font-mono relative inline-block left-1/2 transform -translate-x-1/2"
+					class="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center text-cyber-neon font-mono relative inline-block left-1/2 transform -translate-x-1/2"
 				>
 					<span class="absolute -inset-1 bg-cyber-neon blur opacity-20"></span>
 					{{ t("home.projectArchive") }}
@@ -131,21 +131,21 @@
 
 				<div
 					v-if="loading"
-					class="text-center text-cyber-neon font-mono"
+					class="text-center text-cyber-neon font-mono py-8"
 				>
 					{{ t("home.loading") }}
 				</div>
 
 				<div
 					v-else-if="projects.length === 0"
-					class="text-center text-gray-500 font-mono"
+					class="text-center text-gray-500 font-mono py-8"
 				>
 					{{ t("admin.noProjects") }}
 				</div>
 
 				<div
 					v-else
-					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
 				>
 					<ProjectCard
 						v-for="project in projects"
@@ -167,9 +167,11 @@
 				class="w-full h-px bg-gradient-to-r from-transparent via-cyber-primary to-transparent opacity-50"
 			></div>
 		</div>
+
+		<!-- Collections Section -->
 		<section
 			id="collections"
-			class="py-20 relative overflow-hidden"
+			class="py-12 md:py-20 relative overflow-hidden"
 		>
 			<div
 				class="absolute inset-0 bg-gradient-to-br from-cyber-green/10 via-black to-black"
@@ -198,7 +200,7 @@
 			</div>
 			<div class="container mx-auto px-4 relative z-10">
 				<h2
-					class="text-3xl font-bold mb-12 text-center text-cyber-green font-mono relative inline-block left-1/2 transform -translate-x-1/2"
+					class="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center text-cyber-green font-mono relative inline-block left-1/2 transform -translate-x-1/2"
 				>
 					<span class="absolute -inset-1 bg-cyber-green blur opacity-20"></span>
 					{{ t("home.collections") }}
@@ -206,21 +208,21 @@
 
 				<div
 					v-if="loading"
-					class="text-center text-cyber-green font-mono"
+					class="text-center text-cyber-green font-mono py-8"
 				>
 					{{ t("home.loading") }}
 				</div>
 
 				<div
 					v-else-if="collections.length === 0"
-					class="text-center text-gray-500 font-mono"
+					class="text-center text-gray-500 font-mono py-8"
 				>
 					{{ t("home.noData") }}
 				</div>
 
 				<div
 					v-else
-					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
 				>
 					<CollectionCard
 						v-for="collection in collections"
@@ -241,7 +243,7 @@
 		<!-- Blog Section -->
 		<section
 			id="blog"
-			class="py-20 relative overflow-hidden"
+			class="py-12 md:py-20 relative overflow-hidden"
 		>
 			<div
 				class="absolute inset-0 bg-gradient-to-br from-cyber-pink/10 via-black to-black"
@@ -270,7 +272,7 @@
 			</div>
 			<div class="container mx-auto px-4 relative z-10">
 				<h2
-					class="text-3xl font-bold mb-12 text-center text-cyber-pink font-mono relative inline-block left-1/2 transform -translate-x-1/2"
+					class="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center text-cyber-pink font-mono relative inline-block left-1/2 transform -translate-x-1/2"
 				>
 					<span class="absolute -inset-1 bg-cyber-pink blur opacity-20"></span>
 					{{ t("home.dataLogs") }}
@@ -278,21 +280,21 @@
 
 				<div
 					v-if="loading"
-					class="text-center text-cyber-green font-mono"
+					class="text-center text-cyber-green font-mono py-8"
 				>
 					{{ t("home.loading") }}
 				</div>
 
 				<div
 					v-else-if="documents.length === 0"
-					class="text-center text-gray-500 font-mono"
+					class="text-center text-gray-500 font-mono py-8"
 				>
 					{{ t("home.noData") }}
 				</div>
 
 				<div
 					v-else
-					class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto"
+					class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto"
 				>
 					<DocumentCard
 						v-for="doc in documents"
@@ -305,7 +307,7 @@
 
 		<!-- Footer -->
 		<footer
-			class="py-8 border-t border-cyber-primary text-center text-gray-500 font-mono text-xs"
+			class="py-6 md:py-8 border-t border-cyber-primary text-center text-gray-500 font-mono text-xs px-4"
 		>
 			<p>{{ t("home.footer") }}</p>
 		</footer>

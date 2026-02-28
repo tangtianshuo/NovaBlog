@@ -1,34 +1,38 @@
 /**
  * local server entry file, for local development
  */
-import app from './app.js';
+import dotenv from "dotenv"
+import path from "path"
+import { fileURLToPath } from "url"
 
-/**
- * start server with port
- */
-const PORT = process.env.PORT || 3001;
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const rootDir = path.resolve(__dirname, "../")
+
+dotenv.config({ path: path.resolve(rootDir, ".env") })
+
+const app = (await import('./app.js')).default
+
+const PORT = process.env.PORT || 3001
 
 const server = app.listen(PORT, () => {
-  console.log(`Server ready on port ${PORT}`);
-});
+  console.log(`Server ready on port ${PORT}`)
+})
 
-/**
- * close server
- */
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received');
+process.on("SIGTERM", () => {
+  console.log("SIGTERM signal received")
   server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+    console.log("Server closed")
+    process.exit(0)
+  })
+})
 
-process.on('SIGINT', () => {
-  console.log('SIGINT signal received');
+process.on("SIGINT", () => {
+  console.log("SIGINT signal received")
   server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+    console.log("Server closed")
+    process.exit(0)
+  })
+})
 
-export default app;
+export default app
