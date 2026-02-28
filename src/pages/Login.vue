@@ -5,6 +5,7 @@
 	import { useCyberToast } from "@/composables/useCyberToast"
 	import { useI18n } from "vue-i18n"
 	import { apiFetch } from "@/utils/api"
+	import { Terminal, ArrowLeft } from "lucide-vue-next"
 
 	const username = ref("")
 	const password = ref("")
@@ -54,6 +55,24 @@
 	<div
 		class="flex justify-center items-center h-screen bg-cyber-dark bg-opacity-90 relative overflow-hidden"
 	>
+		<!-- Back to Home Button -->
+		<router-link
+			to="/"
+			class="fixed top-4 left-4 z-50 flex items-center gap-2 text-cyber-neon hover:text-white transition-colors font-mono text-sm min-h-[44px] min-w-[44px] px-3 py-2 border border-cyber-neon rounded hover:bg-cyber-neon hover:bg-opacity-20"
+		>
+			<ArrowLeft class="w-4 h-4" />
+			<span class="hidden sm:inline">{{ t("nav.home") }}</span>
+		</router-link>
+
+		<!-- Logo Button -->
+		<router-link
+			to="/"
+			class="fixed top-4 right-4 z-50 flex items-center gap-2 text-cyber-neon hover:text-white transition-colors"
+		>
+			<Terminal class="w-6 h-6" />
+			<span class="text-xl font-bold font-mono">NOVA</span>
+		</router-link>
+
 		<!-- Background Effects -->
 		<div class="absolute inset-0 z-0">
 			<div
