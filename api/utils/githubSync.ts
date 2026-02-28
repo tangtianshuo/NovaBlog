@@ -112,6 +112,47 @@ export function isGitHubSyncConfigured(): boolean {
 	return !!(TOKEN && OWNER && REPO)
 }
 
+export async function deleteFile(file: { path: string; message: string }): Promise<boolean> {
+	if (!TOKEN || !OWNER || !REPO) {
+		console.warn("GitHub sync not configured - skipping")
+		return false
+	}
+
+	try {
+		const sha = await getFileSha(file.path)
+		if (!sha) {
+			console.warn("File not found on GitHub, skipping delete")
+			return true
+		}
+
+		const body = {
+			message: file.message,
+			sha,
+			branch: BRANCH,
+		}
+
+		const response = await fetch(
+			`${GITHUB_API_BASE}/repos/${OWNER}/${REPO}/contents/${file.path}`,
+			{
+				method: "DELETE",
+				headers: await getHeaders(),
+				body: JSON.stringify(body),
+			},
+		)
+
+		if (!response.ok) {
+			const error = await response.text()
+			console.error("GitHub API error:", error)
+			return false
+		}
+
+		return true
+	} catch (error) {
+		console.error("Error deleting file from GitHub:", error)
+		return false
+	}
+}
+
 export function generateCommitMessage(
 	action: "create" | "update" | "delete",
 	type: "document" | "project" | "collection" | "resume",

@@ -8,6 +8,7 @@
 	import ArticleSelector from "@/components/ArticleSelector.vue"
 	import { Save, Trash2, ArrowLeft, Upload } from "lucide-vue-next"
 	import { apiFetch } from "@/utils/api"
+	import { syncDB } from "@/utils/syncDB"
 
 	const route = useRoute()
 	const router = useRouter()
@@ -63,18 +64,32 @@
 
 		saving.value = true
 		try {
-			if (isNew.value) {
-				await collectionStore.createCollection(form.value)
-			} else {
-				await collectionStore.updateCollection(
-					route.params.id as string,
-					form.value,
-				)
-			}
-			success(t("editor.saved"))
+			const collectionId = isNew.value
+				? crypto.randomUUID()
+				: String(route.params.id)
+
+			await syncDB.saveCollection(
+				{
+					metadata: {
+						id: collectionId,
+						title: form.value.title,
+						slug: form.value.title.toLowerCase().replace(/\s+/g, "-"),
+						description: form.value.description,
+						coverImage: form.value.coverImage,
+						articles: form.value.articles,
+						createdAt: isNew.value
+							? new Date().toISOString()
+							: collectionStore.currentCollection?.metadata.createdAt,
+					},
+					content: form.value.content,
+				},
+				collectionId,
+			)
+
+			success('已保存到本地，请点击"同步到GitHub"按钮上传')
 			router.push("/admin#collections")
 		} catch (e) {
-			error(t("editor.saveError"))
+			error("保存失败")
 		} finally {
 			saving.value = false
 		}
@@ -84,11 +99,11 @@
 		if (isNew.value) return
 
 		try {
-			await collectionStore.deleteCollection(route.params.id as string)
-			danger(t("admin.deleted"))
+			await syncDB.deleteCollection(String(route.params.id))
+			danger('已标记删除，请点击"同步到GitHub"按钮')
 			router.push("/admin#collections")
 		} catch (e) {
-			error(t("admin.deleteError"))
+			error("删除失败")
 		}
 	}
 

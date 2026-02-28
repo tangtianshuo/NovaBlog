@@ -5,6 +5,7 @@
 	import MarkdownViewer from "@/components/MarkdownViewer.vue"
 	import { useCyberToast } from "@/composables/useCyberToast"
 	import { apiFetch } from "@/utils/api"
+	import { syncDB } from "@/utils/syncDB"
 	import {
 		FileText,
 		Save,
@@ -311,44 +312,29 @@
 					link: form.value.link || "",
 				}
 
-				let url = "/projects"
-				let method = "POST"
+				const projectId = currentProject.value?.metadata.id
+					? String(currentProject.value.metadata.id)
+					: crypto.randomUUID()
 
-				if (currentProject.value) {
-					url = `/projects/${currentProject.value.metadata.id}`
-					method = "PUT"
-				}
-
-				const res = await apiFetch(url, {
-					method,
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${authStore.token}`,
-					},
-					body: JSON.stringify({
-						metadata:
-							method === "POST"
-								? {
-										...payload,
-									}
-								: {
-										...payload,
-										id: currentProject.value?.metadata.id,
-										slug: currentProject.value?.metadata.slug,
-										createdAt: currentProject.value?.metadata.createdAt,
-									},
+				await syncDB.saveProject(
+					{
+						metadata: {
+							...payload,
+							id: projectId,
+							slug:
+								currentProject.value?.metadata.slug ||
+								payload.title.toLowerCase().replace(/\s+/g, "-"),
+							createdAt:
+								currentProject.value?.metadata.createdAt ||
+								new Date().toISOString(),
+						},
 						content: payload.content,
-					}),
-				})
+					},
+					projectId || undefined,
+				)
 
-				const data = await res.json()
-				if (data.success) {
-					success(t("editor.saved"))
-					currentProject.value = data.data
-					router.push("/admin#projects")
-				} else {
-					error(data.error || t("editor.saveError"))
-				}
+				success('已保存到本地，请点击"同步到GitHub"按钮上传')
+				router.push("/admin#projects")
 			} else {
 				const payload = {
 					title: form.value.title.trim(),
@@ -362,59 +348,54 @@
 					status,
 				}
 
-				let url = "/documents"
-				let method = "POST"
+				const docId = currentDoc.value?.metadata.id
+					? String(currentDoc.value.metadata.id)
+					: crypto.randomUUID()
 
-				if (currentDoc.value) {
-					url = `/documents/${currentDoc.value.metadata.id}`
-					method = "PUT"
-				}
-
-				const res = await apiFetch(url, {
-					method,
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${authStore.token}`,
-					},
-					body: JSON.stringify(
-						method === "POST"
-							? {
-									...payload,
-									status,
-								}
-							: {
-									metadata: {
-										...payload,
-										id: currentDoc.value?.metadata.id,
-										slug: currentDoc.value?.metadata.slug,
-										createdAt: currentDoc.value?.metadata.createdAt,
-										author: currentDoc.value?.metadata.author,
-										publishedAt:
-											status === "published" &&
-											currentDoc.value?.metadata.status !== "published"
-												? new Date().toISOString()
-												: currentDoc.value?.metadata.publishedAt,
-									},
-									content: payload.content,
-								},
-					),
-				})
-
-				const data = await res.json()
-				if (data.success) {
-					if (status === "published") {
-						success(t("editor.publishedMsg"))
-					} else {
-						success(t("editor.saved"))
+				if (status === "published") {
+					const localDocs = await syncDB.getLocalDocuments()
+					const existingDraft = localDocs.find(
+						(d) => d.id === docId && d.metadata.status === "draft",
+					)
+					if (existingDraft) {
+						error("无法发布：本地存在相同ID的草稿，请先删除草稿或使用新ID")
+						saving.value = false
+						return
 					}
-					currentDoc.value = data.data
-					fetchDocuments()
-				} else {
-					error(data.error || t("editor.saveError"))
 				}
+
+				await syncDB.saveDocument(
+					{
+						metadata: {
+							...payload,
+							id: docId,
+							slug:
+								currentDoc.value?.metadata.slug ||
+								payload.title.toLowerCase().replace(/\s+/g, "-"),
+							createdAt:
+								currentDoc.value?.metadata.createdAt ||
+								new Date().toISOString(),
+							author: currentDoc.value?.metadata.author || "admin",
+							publishedAt:
+								status === "published" &&
+								currentDoc.value?.metadata.status !== "published"
+									? new Date().toISOString()
+									: currentDoc.value?.metadata.publishedAt,
+						},
+						content: payload.content,
+					},
+					docId || undefined,
+				)
+
+				if (status === "published") {
+					success('已保存到本地，请点击"同步到GitHub"按钮上传')
+				} else {
+					success('已保存到本地，请点击"同步到GitHub"按钮上传')
+				}
+				fetchDocuments()
 			}
 		} catch (e) {
-			error(t("editor.saveError"))
+			error("保存失败")
 			console.error(e)
 		} finally {
 			saving.value = false
@@ -429,46 +410,24 @@
 		if (isEditingProject.value) {
 			if (!currentProject.value) return
 			try {
-				const res = await apiFetch(
-					`/projects/${currentProject.value.metadata.id}`,
-					{
-						method: "DELETE",
-						headers: {
-							Authorization: `Bearer ${authStore.token}`,
-						},
-					},
-				)
-
-				if (res.ok) {
-					danger(t("admin.deleted"))
-					createNew()
-					router.push("/admin#projects")
-					showDeleteDialog.value = false
-				}
+				await syncDB.deleteProject(String(currentProject.value.metadata.id))
+				danger('已标记删除，请点击"同步到GitHub"按钮')
+				createNew()
+				router.push("/admin#projects")
+				showDeleteDialog.value = false
 			} catch (e) {
-				error(t("admin.deleteError"))
+				error("删除失败")
 			}
 		} else {
 			if (!currentDoc.value) return
 			try {
-				const res = await apiFetch(
-					`/documents/${currentDoc.value.metadata.id}`,
-					{
-						method: "DELETE",
-						headers: {
-							Authorization: `Bearer ${authStore.token}`,
-						},
-					},
-				)
-
-				if (res.ok) {
-					danger(t("admin.deleted"))
-					createNew()
-					fetchDocuments()
-					showDeleteDialog.value = false
-				}
+				await syncDB.deleteDocument(String(currentDoc.value.metadata.id))
+				danger('已标记删除，请点击"同步到GitHub"按钮')
+				createNew()
+				fetchDocuments()
+				showDeleteDialog.value = false
 			} catch (e) {
-				error(t("admin.deleteError"))
+				error("删除失败")
 			}
 		}
 	}
