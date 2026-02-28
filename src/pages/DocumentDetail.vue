@@ -57,7 +57,7 @@ onMounted(async () => {
       
       <article v-else>
         <!-- Header -->
-        <header class="mb-8 border-b border-cyber-primary pb-8">
+        <header class="mb-6 md:mb-8 border-b border-cyber-primary pb-6 md:pb-8">
           <div class="flex flex-wrap gap-2 mb-4">
             <span v-for="tag in document.metadata.tags" :key="tag" class="flex items-center gap-1 text-xs font-mono text-cyber-pink border border-cyber-pink px-2 py-0.5 rounded">
               <Tag class="w-3 h-3" />
@@ -65,12 +65,12 @@ onMounted(async () => {
             </span>
           </div>
           
-          <h1 class="text-3xl md:text-5xl font-bold text-cyber-neon mb-6 font-mono leading-tight">
+          <h1 class="text-2xl md:text-5xl font-bold text-cyber-neon mb-4 md:mb-6 font-mono leading-tight">
             {{ document.metadata.title }}
           </h1>
           
-          <div class="flex items-center justify-between text-gray-400 font-mono text-sm">
-            <div class="flex items-center gap-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-gray-400 font-mono text-xs sm:text-sm">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-6">
               <span class="flex items-center gap-2">
                 <Calendar class="w-4 h-4" />
                 {{ formatDate(document.metadata.createdAt) }}
@@ -81,15 +81,15 @@ onMounted(async () => {
               </span>
             </div>
             
-            <button @click="shareDocument" class="flex items-center gap-2 hover:text-cyber-green transition-colors">
+            <button @click="shareDocument" class="flex items-center gap-2 hover:text-cyber-green transition-colors min-h-[44px] py-2 sm:py-0">
               <Share2 class="w-4 h-4" />
-              {{ t('doc.share') }}
+              <span>{{ t('doc.share') }}</span>
             </button>
           </div>
         </header>
         
         <!-- Content -->
-        <main class="bg-black bg-opacity-30 p-8 rounded-lg border border-cyber-primary shadow-neon">
+        <main class="bg-black bg-opacity-30 p-4 md:p-8 rounded-lg border border-cyber-primary shadow-neon">
           <MarkdownViewer :content="document.content" />
         </main>
       </article>

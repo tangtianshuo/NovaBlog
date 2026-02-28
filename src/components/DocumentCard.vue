@@ -37,15 +37,15 @@ const navigateToDoc = () => {
 </script>
 
 <template>
-  <div @click="navigateToDoc" class="cursor-pointer group border-l-4 border-cyber-primary bg-cyber-dark bg-opacity-50 p-4 hover:border-cyber-neon hover:bg-opacity-80 transition-all duration-300 relative overflow-hidden">
-    <div class="flex flex-col md:flex-row gap-4">
+  <div @click="navigateToDoc" class="cursor-pointer group border-l-4 border-cyber-primary bg-cyber-dark bg-opacity-50 p-4 hover:border-cyber-neon hover:bg-opacity-80 transition-all duration-300 relative overflow-hidden min-h-[120px]">
+    <div class="flex flex-col md:flex-row gap-3 md:gap-4">
       <!-- Thumbnail if exists -->
       <div v-if="doc.coverImage" class="w-full md:w-32 h-24 flex-shrink-0 overflow-hidden rounded border border-gray-800">
         <img :src="doc.coverImage" class="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all" />
       </div>
       
       <div class="flex-1">
-        <div class="flex items-center text-xs text-gray-500 mb-1 font-mono gap-4">
+        <div class="flex items-center text-xs text-gray-500 mb-1 font-mono gap-2 md:gap-4">
           <span class="flex items-center gap-1">
             <Calendar class="w-3 h-3" />
             {{ formatDate(doc.createdAt) }}
@@ -56,11 +56,11 @@ const navigateToDoc = () => {
           </span>
         </div>
         
-        <h3 class="text-lg font-bold text-cyber-neon mb-2 font-mono group-hover:text-white transition-colors">{{ doc.title }}</h3>
+        <h3 class="text-base md:text-lg font-bold text-cyber-neon mb-2 font-mono group-hover:text-white transition-colors">{{ doc.title }}</h3>
         <p class="text-gray-400 text-sm line-clamp-2 mb-3">{{ doc.description }}</p>
         
         <div class="flex flex-wrap gap-2">
-          <span v-for="tag in doc.tags" :key="tag" class="text-xs text-cyber-primary bg-cyber-neon px-1.5 py-0.5 rounded font-bold opacity-70 group-hover:opacity-100 transition-opacity">
+          <span v-for="tag in doc.tags" :key="tag" class="text-xs text-cyber-primary bg-opacity-50 px-1.5 py-0.5 rounded font-bold opacity-70 group-hover:opacity-100 transition-opacity">
             {{ tag }}
           </span>
         </div>
