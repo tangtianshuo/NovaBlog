@@ -80,7 +80,7 @@ router.post(
 				return
 			}
 
-			const results: { id: string; success: boolean; error?: string }[] = []
+			const results: { id: string; success: boolean; error?: string; warning?: string }[] = []
 
 			for (const item of items) {
 				try {
@@ -89,13 +89,11 @@ router.post(
 						let filePath: string
 
 						if (deleteData.type === "project") {
-							const tempProject = { metadata: { slug: "", title: "" } }
-							tempProject.metadata.id = deleteData.id
 							filePath = `data/projects/${deleteData.id}/index.md`
 						} else if (deleteData.type === "collection") {
 							filePath = `data/collections/${deleteData.id}/index.md`
 						} else {
-							filePath = `data/documents/${deleteData.id}/index.md`
+							filePath = `data/documents/draft/${deleteData.id}/index.md`
 						}
 
 						await deleteFile({

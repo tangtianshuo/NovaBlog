@@ -86,7 +86,7 @@ onMounted(() => {
           class="collection-item"
         >
           <div class="collection-image">
-            <img :src="collection.coverImage || '/images/default-collection.png'" :alt="collection.title" />
+            <img :src="collection.coverImage || '/images/default-project.png'" :alt="collection.title" />
           </div>
           <div class="collection-info">
             <h3 class="collection-title">{{ collection.title }}</h3>
