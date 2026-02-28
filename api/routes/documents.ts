@@ -1,6 +1,10 @@
 import { Router, type Request, type Response } from "express"
 import { fileSystem } from "../utils/fileSystem.js"
-import { createOrUpdateFile, generateCommitMessage } from "../utils/githubSync.js"
+import {
+	createOrUpdateFile,
+	generateCommitMessage,
+	isGitHubSyncConfigured,
+} from "../utils/githubSync.js"
 import { authenticateToken } from "./auth.js"
 import type { Document, DocumentMetadata } from "../types.js"
 import matter from "gray-matter"
@@ -8,6 +12,9 @@ import crypto from "crypto"
 import path from "path"
 
 const router = Router()
+
+const isVercel =
+	process.env.VERCEL === "1" || process.env.NODE_ENV === "production"
 
 function getDocumentPath(doc: Document): string {
 	const statusDir = doc.metadata.status
@@ -94,8 +101,6 @@ router.post(
 				content: content || "",
 			}
 
-			await fileSystem.saveDocument(newDoc)
-
 			const filePath = getDocumentPath(newDoc)
 			const cleanMetadata: Record<string, unknown> = {}
 			for (const [key, value] of Object.entries(newDoc.metadata)) {
@@ -105,11 +110,36 @@ router.post(
 			}
 			const fileContent = matter.stringify(newDoc.content, cleanMetadata)
 
-			await createOrUpdateFile({
-				path: filePath,
-				content: fileContent,
-				message: generateCommitMessage("create", "document", newDoc.metadata.title),
-			})
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error:
+							"GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage(
+						"create",
+						"document",
+						newDoc.metadata.title,
+					),
+				})
+			} else {
+				await fileSystem.saveDocument(newDoc)
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage(
+						"create",
+						"document",
+						newDoc.metadata.title,
+					),
+				})
+			}
 
 			res.json({ success: true, data: newDoc, synced: true })
 		} catch (error) {
@@ -163,8 +193,6 @@ router.put(
 					updates.content !== undefined ? updates.content : existingDoc.content,
 			}
 
-			await fileSystem.saveDocument(updatedDoc)
-
 			const filePath = getDocumentPath(updatedDoc)
 			const cleanMetadata: Record<string, unknown> = {}
 			for (const [key, value] of Object.entries(updatedDoc.metadata)) {
@@ -174,11 +202,36 @@ router.put(
 			}
 			const fileContent = matter.stringify(updatedDoc.content, cleanMetadata)
 
-			await createOrUpdateFile({
-				path: filePath,
-				content: fileContent,
-				message: generateCommitMessage("update", "document", updatedDoc.metadata.title),
-			})
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error:
+							"GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage(
+						"update",
+						"document",
+						updatedDoc.metadata.title,
+					),
+				})
+			} else {
+				await fileSystem.saveDocument(updatedDoc)
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage(
+						"update",
+						"document",
+						updatedDoc.metadata.title,
+					),
+				})
+			}
 
 			res.json({ success: true, data: updatedDoc, synced: true })
 		} catch (error) {
@@ -197,7 +250,19 @@ router.delete(
 	async (req: Request, res: Response): Promise<void> => {
 		try {
 			const { id } = req.params
-			await fileSystem.deleteDocument(id)
+
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error:
+							"GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+			} else {
+				await fileSystem.deleteDocument(id)
+			}
 			res.json({ success: true })
 		} catch (error) {
 			res

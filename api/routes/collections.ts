@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express"
 import { fileSystem } from "../utils/fileSystem.js"
-import { createOrUpdateFile, generateCommitMessage } from "../utils/githubSync.js"
+import { createOrUpdateFile, generateCommitMessage, isGitHubSyncConfigured } from "../utils/githubSync.js"
 import { authenticateToken } from "./auth.js"
 import type { Collection } from "../types.js"
 import matter from "gray-matter"
@@ -8,6 +8,8 @@ import crypto from "crypto"
 import path from "path"
 
 const router = Router()
+
+const isVercel = process.env.VERCEL === "1" || process.env.NODE_ENV === "production"
 
 function getCollectionPath(collection: Collection): string {
 	const folderName = (collection.metadata.slug || collection.metadata.title)
@@ -79,8 +81,6 @@ router.post(
 				content: content || "",
 			}
 
-			await fileSystem.saveCollection(newCollection)
-
 			const filePath = getCollectionPath(newCollection)
 			const cleanMetadata: Record<string, unknown> = {}
 			for (const [key, value] of Object.entries(newCollection.metadata)) {
@@ -90,11 +90,27 @@ router.post(
 			}
 			const fileContent = matter.stringify(newCollection.content, cleanMetadata)
 
-			await createOrUpdateFile({
-				path: filePath,
-				content: fileContent,
-				message: generateCommitMessage("create", "collection", newCollection.metadata.title),
-			})
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error: "GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("create", "collection", newCollection.metadata.title),
+				})
+			} else {
+				await fileSystem.saveCollection(newCollection)
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("create", "collection", newCollection.metadata.title),
+				})
+			}
 
 			res.json({ success: true, data: newCollection, synced: true })
 		} catch (error) {
@@ -134,8 +150,6 @@ router.put(
 				content: updates.content !== undefined ? updates.content : existingCollection.content,
 			}
 
-			await fileSystem.saveCollection(updatedCollection)
-
 			const filePath = getCollectionPath(updatedCollection)
 			const cleanMetadata: Record<string, unknown> = {}
 			for (const [key, value] of Object.entries(updatedCollection.metadata)) {
@@ -145,11 +159,27 @@ router.put(
 			}
 			const fileContent = matter.stringify(updatedCollection.content, cleanMetadata)
 
-			await createOrUpdateFile({
-				path: filePath,
-				content: fileContent,
-				message: generateCommitMessage("update", "collection", updatedCollection.metadata.title),
-			})
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error: "GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("update", "collection", updatedCollection.metadata.title),
+				})
+			} else {
+				await fileSystem.saveCollection(updatedCollection)
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("update", "collection", updatedCollection.metadata.title),
+				})
+			}
 
 			res.json({ success: true, data: updatedCollection, synced: true })
 		} catch (error) {
@@ -165,7 +195,18 @@ router.delete(
 	async (req: Request, res: Response): Promise<void> => {
 		try {
 			const { id } = req.params
-			await fileSystem.deleteCollection(id)
+
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error: "GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+			} else {
+				await fileSystem.deleteCollection(id)
+			}
 			res.json({ success: true })
 		} catch (error) {
 			console.error("Error deleting collection:", error)

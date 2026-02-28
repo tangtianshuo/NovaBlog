@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express"
 import { fileSystem } from "../utils/fileSystem.js"
-import { createOrUpdateFile, generateCommitMessage } from "../utils/githubSync.js"
+import { createOrUpdateFile, generateCommitMessage, isGitHubSyncConfigured } from "../utils/githubSync.js"
 import { authenticateToken } from "./auth.js"
 import type { Project, ProjectMetadata } from "../types.js"
 import matter from "gray-matter"
@@ -8,6 +8,8 @@ import crypto from "crypto"
 import path from "path"
 
 const router = Router()
+
+const isVercel = process.env.VERCEL === "1" || process.env.NODE_ENV === "production"
 
 const DEFAULT_PROJECT_IMAGE = "/images/default-project.png"
 
@@ -98,8 +100,6 @@ router.post(
 				content: content || "",
 			}
 
-			await fileSystem.saveProject(newProject)
-
 			const filePath = getProjectPath(newProject)
 			const cleanMetadata: Record<string, unknown> = {}
 			for (const [key, value] of Object.entries(newProject.metadata)) {
@@ -109,11 +109,27 @@ router.post(
 			}
 			const fileContent = matter.stringify(newProject.content, cleanMetadata)
 
-			await createOrUpdateFile({
-				path: filePath,
-				content: fileContent,
-				message: generateCommitMessage("create", "project", newProject.metadata.title),
-			})
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error: "GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("create", "project", newProject.metadata.title),
+				})
+			} else {
+				await fileSystem.saveProject(newProject)
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("create", "project", newProject.metadata.title),
+				})
+			}
 
 			res.json({ success: true, data: newProject, synced: true })
 		} catch (error) {
@@ -153,8 +169,6 @@ router.put(
 				content: updates.content !== undefined ? updates.content : existingProject.content,
 			}
 
-			await fileSystem.saveProject(updatedProject)
-
 			const filePath = getProjectPath(updatedProject)
 			const cleanMetadata: Record<string, unknown> = {}
 			for (const [key, value] of Object.entries(updatedProject.metadata)) {
@@ -164,11 +178,27 @@ router.put(
 			}
 			const fileContent = matter.stringify(updatedProject.content, cleanMetadata)
 
-			await createOrUpdateFile({
-				path: filePath,
-				content: fileContent,
-				message: generateCommitMessage("update", "project", updatedProject.metadata.title),
-			})
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error: "GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("update", "project", updatedProject.metadata.title),
+				})
+			} else {
+				await fileSystem.saveProject(updatedProject)
+				await createOrUpdateFile({
+					path: filePath,
+					content: fileContent,
+					message: generateCommitMessage("update", "project", updatedProject.metadata.title),
+				})
+			}
 
 			res.json({ success: true, data: updatedProject, synced: true })
 		} catch (error) {
@@ -184,7 +214,18 @@ router.delete(
 	async (req: Request, res: Response): Promise<void> => {
 		try {
 			const { id } = req.params
-			await fileSystem.deleteProject(id)
+
+			if (isVercel) {
+				if (!isGitHubSyncConfigured()) {
+					res.status(503).json({
+						success: false,
+						error: "GitHub sync not configured on Vercel. Please configure GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO environment variables.",
+					})
+					return
+				}
+			} else {
+				await fileSystem.deleteProject(id)
+			}
 			res.json({ success: true })
 		} catch (error) {
 			console.error("Error deleting project:", error)
