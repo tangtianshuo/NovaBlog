@@ -5,11 +5,11 @@ slug: testgitrepo
 description: TestGitRepo
 status: published
 createdAt: '2026-02-28T10:18:25.679Z'
-updatedAt: '2026-02-28T10:18:41.235Z'
+updatedAt: '2026-02-28T12:12:54.119Z'
 tags:
   - TestGitRepo
 author: admin
-content: TestGitRepo
-publishedAt: '2026-02-28T10:18:41.235Z'
+content: "TestGitRepo\r\n"
+publishedAt: '2026-02-28T12:12:54.119Z'
 ---
 TestGitRepo
