@@ -1,5 +1,5 @@
 const DB_NAME = "novablog-sync"
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 export interface SyncItem {
 	id: string
@@ -16,6 +16,18 @@ export interface LocalItem {
 	metadata: Record<string, unknown>
 	content: string
 	timestamp: number
+}
+
+export interface TrashStoreItem {
+	id: string
+	itemId: string
+	type: "document" | "project" | "collection"
+	title: string
+	deletedAt: number
+	data?: {
+		metadata: Record<string, unknown>
+		content: string
+	}
 }
 
 class IndexedDBManager {
@@ -38,12 +50,24 @@ class IndexedDBManager {
 				if (!db.objectStoreNames.contains("syncQueue")) {
 					db.createObjectStore("syncQueue", { keyPath: "id" })
 				}
+
+				if (!db.objectStoreNames.contains("trash")) {
+					db.createObjectStore("trash", { keyPath: "id" })
+				}
 			}
 		})
 	}
 
 	private async getDB(): Promise<IDBDatabase> {
 		if (!this.db) {
+			await this.init()
+		}
+		return this.db!
+	}
+
+	private async getDBWithTrash(): Promise<IDBDatabase> {
+		if (!this.db || !this.db.objectStoreNames.contains("trash")) {
+			this.db = null
 			await this.init()
 		}
 		return this.db!
@@ -96,6 +120,27 @@ class IndexedDBManager {
 	async getQueueCount(): Promise<number> {
 		const items = await this.getQueue()
 		return items.length
+	}
+
+	async getDraftCount(): Promise<number> {
+		const items = await this.getQueue()
+		return items.filter(
+			(item) =>
+				item.type === "document" &&
+				(item.data as { metadata?: { status?: string } })?.metadata?.status === "draft",
+		).length
+	}
+
+	async clearDrafts(): Promise<void> {
+		const items = await this.getQueue()
+		const draftItems = items.filter(
+			(item) =>
+				item.type === "document" &&
+				(item.data as { metadata?: { status?: string } })?.metadata?.status === "draft",
+		)
+		for (const item of draftItems) {
+			await this.removeFromQueue(item.id)
+		}
 	}
 
 	async saveDocument(doc: { metadata: Record<string, unknown>; content: string }, id?: string): Promise<string> {
@@ -221,6 +266,55 @@ class IndexedDBManager {
 			content: (item.data as { content: string }).content || "",
 			timestamp: item.timestamp,
 		}
+	}
+
+	async addToTrash(item: TrashStoreItem): Promise<void> {
+		const db = await this.getDBWithTrash()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("trash", "readwrite")
+			const store = transaction.objectStore("trash")
+			const request = store.put(item)
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve()
+		})
+	}
+
+	async getTrashItems(): Promise<TrashStoreItem[]> {
+		const db = await this.getDBWithTrash()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("trash", "readonly")
+			const store = transaction.objectStore("trash")
+			const request = store.getAll()
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve(request.result)
+		})
+	}
+
+	async removeFromTrash(id: string): Promise<void> {
+		const db = await this.getDBWithTrash()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("trash", "readwrite")
+			const store = transaction.objectStore("trash")
+			const request = store.delete(id)
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve()
+		})
+	}
+
+	async clearTrash(): Promise<void> {
+		const db = await this.getDBWithTrash()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("trash", "readwrite")
+			const store = transaction.objectStore("trash")
+			const request = store.clear()
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve()
+		})
+	}
+
+	async getTrashCount(): Promise<number> {
+		const items = await this.getTrashItems()
+		return items.length
 	}
 }
 

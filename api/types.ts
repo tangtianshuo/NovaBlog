@@ -5,12 +5,21 @@ export interface User {
 	role: "admin" | "user"
 }
 
+export type OperationStatus =
+	| "draft"
+	| "pending"
+	| "syncing"
+	| "published"
+	| "trash"
+	| "restoring"
+
 export interface DocumentMetadata {
 	id: string
 	title: string
 	slug: string
 	description: string
 	status: "draft" | "published"
+	operationStatus?: OperationStatus
 	createdAt: string
 	updatedAt: string
 	publishedAt?: string
@@ -18,7 +27,7 @@ export interface DocumentMetadata {
 	coverImage?: string
 	readingTime?: number
 	author: string
-	category?: string // Represents the folder path relative to status folder
+	category?: string
 }
 
 export interface Document {
@@ -39,6 +48,7 @@ export interface ProjectMetadata {
 	imageUrl: string
 	link?: string
 	tags: string[]
+	operationStatus?: OperationStatus
 	createdAt: string
 	updatedAt: string
 }
@@ -54,7 +64,8 @@ export interface CollectionMetadata {
 	slug: string
 	description: string
 	coverImage?: string
-	articles: string[] // List of document IDs
+	articles: string[]
+	operationStatus?: OperationStatus
 	createdAt: string
 	updatedAt: string
 }
@@ -128,4 +139,18 @@ export interface Award {
 	name: string
 	issuer: string
 	date: string
+}
+
+export type TrashItemType = "document" | "project" | "collection"
+
+export interface TrashItem {
+	id: string
+	itemId: string
+	type: TrashItemType
+	title: string
+	deletedAt: string
+	data?: {
+		metadata: Record<string, unknown>
+		content: string
+	}
 }

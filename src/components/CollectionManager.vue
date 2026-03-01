@@ -7,12 +7,15 @@ import { useRouter } from 'vue-router';
 import type { CollectionMetadata } from '../../api/types';
 import { useI18n } from 'vue-i18n';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import StatusTag from '@/components/StatusTag.vue';
+import { syncDB } from '@/utils/syncDB';
 
 const collectionStore = useCollectionStore();
 const router = useRouter();
 const { t } = useI18n();
 const showDeleteDialog = ref(false);
 const collectionToDelete = ref<string | null>(null);
+const collectionToDeleteTitle = ref<string>('');
 const { success, error, danger } = useCyberToast();
 
 const fetchCollections = async () => {
@@ -21,16 +24,32 @@ const fetchCollections = async () => {
 
 const confirmDelete = (collection: CollectionMetadata) => {
   collectionToDelete.value = collection.id;
+  collectionToDeleteTitle.value = collection.title;
   showDeleteDialog.value = true;
 };
 
 const deleteCollection = async () => {
   if (!collectionToDelete.value) return;
   try {
+    const collection = collectionStore.collections.find(c => c.id === collectionToDelete.value);
+    if (collection) {
+      await syncDB.addToTrash({
+        id: `trash-collection-${collectionToDelete.value}`,
+        itemId: collectionToDelete.value,
+        type: 'collection',
+        title: collection.title,
+        deletedAt: Date.now(),
+        data: {
+          metadata: JSON.parse(JSON.stringify(collection)),
+          content: ''
+        }
+      });
+    }
     await collectionStore.deleteCollection(collectionToDelete.value);
-    danger(t('admin.deleted'));
+    danger(t('admin.movedToTrash'));
     showDeleteDialog.value = false;
     collectionToDelete.value = null;
+    collectionToDeleteTitle.value = '';
   } catch (e) {
     error(t('admin.deleteError'));
   }
@@ -89,7 +108,15 @@ onMounted(() => {
             <img :src="collection.coverImage || '/images/default-project.png'" :alt="collection.title" />
           </div>
           <div class="collection-info">
-            <h3 class="collection-title">{{ collection.title }}</h3>
+            <h3 class="collection-title">
+              {{ collection.title }}
+              <StatusTag
+                v-if="collection.operationStatus"
+                :status="collection.operationStatus"
+                :show-icon="true"
+                class="ml-2"
+              />
+            </h3>
             <p class="collection-description">{{ collection.description }}</p>
             <div class="collection-meta">
               <div class="collection-stats">

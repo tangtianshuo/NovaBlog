@@ -8,6 +8,8 @@ import type { ProjectMetadata } from '../../api/types';
 import { useI18n } from 'vue-i18n';
 import { apiFetch } from '@/utils/api';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import StatusTag from '@/components/StatusTag.vue';
+import { syncDB } from '@/utils/syncDB';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -16,6 +18,7 @@ const loading = ref(true);
 const { t, locale } = useI18n();
 const showDeleteDialog = ref(false);
 const projectToDelete = ref<string | null>(null);
+const projectToDeleteTitle = ref<string>('');
 const { success, error, danger } = useCyberToast();
 
 const fetchProjects = async () => {
@@ -37,12 +40,27 @@ const fetchProjects = async () => {
 
 const confirmDelete = (project: ProjectMetadata) => {
   projectToDelete.value = project.id;
+  projectToDeleteTitle.value = project.title;
   showDeleteDialog.value = true;
 };
 
 const deleteProject = async () => {
   if (!projectToDelete.value) return;
   try {
+    const project = projects.value.find(p => p.id === projectToDelete.value);
+    if (project) {
+      await syncDB.addToTrash({
+        id: `trash-project-${projectToDelete.value}`,
+        itemId: projectToDelete.value,
+        type: 'project',
+        title: project.title,
+        deletedAt: Date.now(),
+        data: {
+          metadata: JSON.parse(JSON.stringify(project)),
+          content: ''
+        }
+      });
+    }
     const res = await apiFetch(`/projects/${projectToDelete.value}`, {
       method: 'DELETE',
       headers: {
@@ -50,10 +68,11 @@ const deleteProject = async () => {
       },
     });
     if (res.ok) {
-      danger(t('admin.deleted'));
+      danger(t('admin.movedToTrash'));
       fetchProjects();
       showDeleteDialog.value = false;
       projectToDelete.value = null;
+      projectToDeleteTitle.value = '';
     }
   } catch (e) {
     error(t('admin.deleteError'));
@@ -113,7 +132,15 @@ onMounted(() => {
             <img :src="project.imageUrl" :alt="project.title" />
           </div>
           <div class="project-info">
-            <h3 class="project-title">{{ project.title }}</h3>
+            <h3 class="project-title">
+              {{ project.title }}
+              <StatusTag
+                v-if="project.operationStatus"
+                :status="project.operationStatus"
+                :show-icon="true"
+                class="ml-2"
+              />
+            </h3>
             <p class="project-description">{{ project.description }}</p>
             <div class="project-meta">
               <div class="project-tags">

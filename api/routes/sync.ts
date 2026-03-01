@@ -107,6 +107,11 @@ router.post(
 						const docId = metadata.id as string
 						const status = metadata.status as string
 
+						if (status === "draft") {
+							results.push({ id: item.id, success: true, warning: "草稿不进入Git同步" })
+							continue
+						}
+
 						let draftDeleted = false
 						let conflictWarning = ""
 

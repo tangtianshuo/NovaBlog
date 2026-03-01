@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Check, X, AlertTriangle, Info, Trash2 } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 
 export interface ToastItem {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info' | 'danger';
+  title?: string;
   message: string;
+  detail?: string;
+  action?: { label: string; to?: string; handler?: () => void };
   duration?: number;
 }
 
@@ -18,6 +22,7 @@ const emit = defineEmits<{
   close: [id: string];
 }>();
 
+const router = useRouter();
 const typingText = ref('');
 const typingIndex = ref(0);
 const isClosing = ref(false);
@@ -92,6 +97,21 @@ const close = () => {
   }, 300);
 };
 
+const handleAction = () => {
+  if (props.toast.action) {
+    if (props.toast.action.to) {
+      router.push(props.toast.action.to);
+    } else if (props.toast.action.handler) {
+      props.toast.action.handler();
+    }
+    close();
+  }
+};
+
+const getDisplayMessage = () => {
+  return props.toast.title || props.toast.message;
+};
+
 onMounted(() => {
   startTyping();
   
@@ -129,9 +149,22 @@ onUnmounted(() => {
     </div>
     
     <div class="toast-content">
-      <div class="toast-message">
-        {{ typingText }}<span class="cursor">_</span>
+      <div v-if="toast.title" class="toast-title">
+        {{ toast.title }}
       </div>
+      <div class="toast-message">
+        {{ toast.title ? toast.message : typingText }}<span class="cursor">_</span>
+      </div>
+      <div v-if="toast.detail" class="toast-detail">
+        {{ toast.detail }}
+      </div>
+      <button
+        v-if="toast.action"
+        class="toast-action"
+        @click="handleAction"
+      >
+        {{ toast.action.label }}
+      </button>
     </div>
     
     <button class="toast-close" @click="close">
@@ -205,6 +238,36 @@ onUnmounted(() => {
   text-shadow: 0 0 5px var(--shadow-color);
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+.toast-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: var(--text-color);
+}
+
+.toast-detail {
+  font-size: 12px;
+  margin-top: 6px;
+  opacity: 0.8;
+  color: var(--text-color);
+}
+
+.toast-action {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--text-color);
+  color: var(--text-color);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toast-action:hover {
+  background: var(--text-color);
+  color: #0d0d0d;
 }
 
 .cursor {

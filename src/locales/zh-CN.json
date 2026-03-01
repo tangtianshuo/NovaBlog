@@ -60,7 +60,8 @@
 		"deleteConfirm": "确定要删除此文档吗？",
 		"deleted": "文档已删除",
 		"fetchError": "获取文档失败",
-		"deleteError": "删除失败"
+		"deleteError": "删除失败",
+		"movedToTrash": "已移入回收站"
 	},
 	"editor": {
 		"files": "文件",
