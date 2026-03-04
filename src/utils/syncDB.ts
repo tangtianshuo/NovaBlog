@@ -1,9 +1,9 @@
 const DB_NAME = "novablog-sync"
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 export interface SyncItem {
 	id: string
-	type: "document" | "project" | "collection" | "delete"
+	type: "document" | "project" | "collection" | "resume" | "delete"
 	action: "create" | "update" | "delete"
 	data: unknown
 	timestamp: number
@@ -11,7 +11,7 @@ export interface SyncItem {
 
 export interface LocalItem {
 	id: string
-	type: "document" | "project" | "collection"
+	type: "document" | "project" | "collection" | "resume"
 	action: "create" | "update"
 	metadata: Record<string, unknown>
 	content: string
@@ -28,6 +28,17 @@ export interface TrashStoreItem {
 		metadata: Record<string, unknown>
 		content: string
 	}
+}
+
+export interface MediaStoreItem {
+	id: string
+	documentId: string
+	filename: string
+	data: string
+	type: string
+	size: number
+	path: string
+	timestamp: number
 }
 
 class IndexedDBManager {
@@ -53,6 +64,10 @@ class IndexedDBManager {
 
 				if (!db.objectStoreNames.contains("trash")) {
 					db.createObjectStore("trash", { keyPath: "id" })
+				}
+
+				if (!db.objectStoreNames.contains("media")) {
+					db.createObjectStore("media", { keyPath: "id" })
 				}
 			}
 		})
@@ -249,6 +264,109 @@ class IndexedDBManager {
 				content: (item.data as { content: string }).content || "",
 				timestamp: item.timestamp,
 			}))
+	}
+
+	async saveResume(resume: { metadata: Record<string, unknown>; content: unknown }, id?: string): Promise<string> {
+		const resumeId = id || "resume"
+		await this.addToQueue({
+			id: resumeId,
+			type: "resume",
+			action: id ? "update" : "create",
+			data: resume,
+			timestamp: Date.now(),
+		})
+		return resumeId
+	}
+
+	async getLocalResume(): Promise<LocalItem | null> {
+		const items = await this.getQueue()
+		const resumeItem = items.find(item => item.type === "resume" && item.action !== "delete")
+		if (!resumeItem) return null
+		return {
+			id: "resume",
+			type: "resume",
+			action: resumeItem.action as "create" | "update",
+			metadata: (resumeItem.data as { metadata: Record<string, unknown> }).metadata,
+			content: JSON.stringify((resumeItem.data as { content: unknown }).content || ""),
+			timestamp: resumeItem.timestamp,
+		}
+	}
+
+	private async getMediaDB(): Promise<IDBDatabase> {
+		if (!this.db || !this.db.objectStoreNames.contains("media")) {
+			this.db = null
+			await this.init()
+		}
+		return this.db!
+	}
+
+	async saveMedia(media: MediaStoreItem): Promise<void> {
+		const db = await this.getMediaDB()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("media", "readwrite")
+			const store = transaction.objectStore("media")
+			const request = store.put(media)
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve()
+		})
+	}
+
+	async getMedia(id: string): Promise<MediaStoreItem | null> {
+		const db = await this.getMediaDB()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("media", "readonly")
+			const store = transaction.objectStore("media")
+			const request = store.get(id)
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve(request.result || null)
+		})
+	}
+
+	async getMediaByDocumentId(documentId: string): Promise<MediaStoreItem[]> {
+		const db = await this.getMediaDB()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("media", "readonly")
+			const store = transaction.objectStore("media")
+			const request = store.getAll()
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => {
+				const all = request.result as MediaStoreItem[]
+				resolve(all.filter(m => m.documentId === documentId))
+			}
+		})
+	}
+
+	async getAllMedia(): Promise<MediaStoreItem[]> {
+		const db = await this.getMediaDB()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("media", "readonly")
+			const store = transaction.objectStore("media")
+			const request = store.getAll()
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve(request.result)
+		})
+	}
+
+	async deleteMedia(id: string): Promise<void> {
+		const db = await this.getMediaDB()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("media", "readwrite")
+			const store = transaction.objectStore("media")
+			const request = store.delete(id)
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve()
+		})
+	}
+
+	async clearMedia(): Promise<void> {
+		const db = await this.getMediaDB()
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("media", "readwrite")
+			const store = transaction.objectStore("media")
+			const request = store.clear()
+			request.onerror = () => reject(request.error)
+			request.onsuccess = () => resolve()
+		})
 	}
 
 	async getLocalItemById(id: string): Promise<LocalItem | null> {

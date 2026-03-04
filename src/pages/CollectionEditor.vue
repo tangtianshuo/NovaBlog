@@ -1,12 +1,13 @@
 <script setup lang="ts">
 	import { ref, onMounted, computed } from "vue"
 	import { useRoute, useRouter } from "vue-router"
-	import { useCollectionStore } from "@/stores/collection"
-	import { useCyberToast } from "@/composables/useCyberToast"
 	import { useI18n } from "vue-i18n"
+	import { Save, Trash2, ArrowLeft, Upload } from "lucide-vue-next"
 	import MarkdownViewer from "@/components/MarkdownViewer.vue"
 	import ArticleSelector from "@/components/ArticleSelector.vue"
-	import { Save, Trash2, ArrowLeft, Upload } from "lucide-vue-next"
+	import { useCollectionStore } from "@/stores/collection"
+	import { useCyberToast } from "@/composables/useCyberToast"
+	import type { Collection } from "../../api/types"
 	import { apiFetch } from "@/utils/api"
 	import { syncDB } from "@/utils/syncDB"
 
@@ -68,6 +69,10 @@
 				? crypto.randomUUID()
 				: String(route.params.id)
 
+			const articlesArray = Array.isArray(form.value.articles)
+				? [...form.value.articles]
+				: []
+
 			await syncDB.saveCollection(
 				{
 					metadata: {
@@ -76,7 +81,7 @@
 						slug: form.value.title.toLowerCase().replace(/\s+/g, "-"),
 						description: form.value.description,
 						coverImage: form.value.coverImage,
-						articles: form.value.articles,
+						articles: articlesArray,
 						createdAt: isNew.value
 							? new Date().toISOString()
 							: collectionStore.currentCollection?.metadata.createdAt,

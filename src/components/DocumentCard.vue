@@ -3,9 +3,6 @@ import { useRouter } from 'vue-router';
 import { Calendar, Clock } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
-// Since api types are outside src, vite might complain if imported directly.
-// But typescript understands it.
-// If not, we define local interface.
 interface DocMeta {
   id: string;
   title: string;

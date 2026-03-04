@@ -11,7 +11,6 @@ import CollectionDetail from "@/pages/CollectionDetail.vue"
 import CollectionEditor from "@/pages/CollectionEditor.vue"
 import { useAuthStore } from "@/stores/auth"
 
-// Define route configuration
 const routes = [
 	{
 		path: "/",
@@ -92,7 +91,6 @@ const routes = [
 	},
 ]
 
-// Create router instance
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes,

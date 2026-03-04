@@ -144,6 +144,27 @@
 			return true
 		})
 
+		const mediaMap: Record<
+			string,
+			{ filename: string; data: string; type: string }[]
+		> = {}
+		for (const item of items) {
+			if (item.type === "document") {
+				const docId = (item.data as { metadata?: { id?: string } })?.metadata
+					?.id
+				if (docId) {
+					const media = await syncDB.getMediaByDocumentId(docId)
+					if (media.length > 0) {
+						mediaMap[docId] = media.map((m) => ({
+							filename: m.filename,
+							data: m.data,
+							type: m.type,
+						}))
+					}
+				}
+			}
+		}
+
 		syncing.value = true
 		try {
 			const res = await apiFetch("/sync", {
@@ -152,7 +173,7 @@
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${authStore.token}`,
 				},
-				body: JSON.stringify({ items }),
+				body: JSON.stringify({ items, mediaMap }),
 			})
 
 			const data = await res.json()
@@ -163,6 +184,10 @@
 					if (syncedIds.includes(item.id)) {
 						await syncDB.removeFromQueue(item.id)
 					}
+				}
+
+				if (Object.keys(mediaMap).length > 0) {
+					await syncDB.clearMedia()
 				}
 
 				const draftCount = await syncDB.getDraftCount()
@@ -216,8 +241,11 @@
 					slug: doc.metadata.slug as string,
 					description: doc.metadata.description as string,
 					status: doc.metadata.status as "draft" | "published",
-					createdAt: doc.metadata.createdAt as string,
-					updatedAt: new Date(doc.timestamp).toISOString(),
+					createdAt:
+						(doc.metadata.createdAt as string) || new Date().toISOString(),
+					updatedAt: doc.timestamp
+						? new Date(doc.timestamp).toISOString()
+						: (doc.metadata.updatedAt as string) || new Date().toISOString(),
 					publishedAt: doc.metadata.publishedAt as string,
 					tags: doc.metadata.tags as string[],
 					coverImage: doc.metadata.coverImage as string,

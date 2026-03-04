@@ -50,7 +50,6 @@
 			securityLevel: "loose",
 		})
 
-		// Find all mermaid code blocks
 		const mermaidBlocks = previewRef.value.querySelectorAll(
 			"pre code.language-mermaid",
 		)
@@ -76,7 +75,6 @@
 		}
 	}
 
-	// Watch content changes and re-render mermaid
 	watch(
 		() => props.content,
 		() => {

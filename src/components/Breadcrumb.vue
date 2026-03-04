@@ -17,11 +17,9 @@
 		for (const p of paths) {
 			currentPath += `/${p}`
 
-			// Skip if it's just an ID (simple heuristic)
 			if (p.length > 20 && p.includes("-")) continue
 
 			let name = p
-			// Map common paths to localized names
 			if (p === "collections") name = t("nav.collections")
 			else if (p === "projects") name = t("nav.projects")
 			else if (p === "doc") name = t("nav.docs")

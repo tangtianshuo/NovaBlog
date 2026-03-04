@@ -5,17 +5,12 @@ import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
 
-// Create Vue application instance
 const app = createApp(App)
 
-// Use Pinia
 app.use(createPinia())
 
-// Use Router
 app.use(router)
 
-// Use i18n
 app.use(i18n)
 
-// Mount application
 app.mount('#app')
