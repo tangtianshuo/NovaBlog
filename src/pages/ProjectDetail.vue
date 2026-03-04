@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import MarkdownViewer from '@/components/MarkdownViewer.vue';
+import DocumentCard from '@/components/DocumentCard.vue';
 import { useCyberToast } from '@/composables/useCyberToast';
 import { ExternalLink, ArrowLeft } from 'lucide-vue-next';
-import type { Project } from '../../api/types';
+import type { Project, DocumentMetadata } from '../../api/types';
 import { apiFetch } from '@/utils/api';
 import { useI18n } from 'vue-i18n';
 
@@ -14,6 +15,7 @@ const { t } = useI18n();
 const { error } = useCyberToast();
 
 const project = ref<Project | null>(null);
+const relatedDocs = ref<DocumentMetadata[]>([]);
 const loading = ref(true);
 
 const fetchProject = async () => {
@@ -23,6 +25,22 @@ const fetchProject = async () => {
     const data = await res.json();
     if (data.success) {
       project.value = data.data;
+      
+      if (project.value?.metadata.articles && project.value.metadata.articles.length > 0) {
+        const docs: DocumentMetadata[] = [];
+        for (const docId of project.value.metadata.articles) {
+          try {
+            const docRes = await apiFetch(`/documents/${docId}`);
+            const docData = await docRes.json();
+            if (docData.success) {
+              docs.push(docData.data.metadata);
+            }
+          } catch (e) {
+            console.error('Failed to fetch doc:', docId, e);
+          }
+        }
+        relatedDocs.value = docs;
+      }
     } else {
       error(t('project.loadError'));
     }
@@ -113,6 +131,19 @@ onMounted(() => {
         <!-- Content -->
         <div class="markdown-content">
           <MarkdownViewer :content="project.content" />
+        </div>
+
+        <!-- Related Articles -->
+        <div v-if="relatedDocs.length > 0" class="related-articles mt-8">
+          <h2 class="text-2xl font-bold text-cyber-neon mb-6 font-mono">关联文档</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DocumentCard
+              v-for="doc in relatedDocs"
+              :key="doc.id"
+              :doc="doc"
+              @click="router.push(`/doc/${doc.slug}`)"
+            />
+          </div>
         </div>
       </div>
     </div>

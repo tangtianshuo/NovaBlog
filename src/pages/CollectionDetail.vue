@@ -36,13 +36,10 @@ const fetchArticles = async (articleIds: string[]) => {
   if (!articleIds || articleIds.length === 0) return;
   
   try {
-    // In a real app, we might want a batch fetch API
-    // For now, we fetch all published documents and filter
     const res = await apiFetch('/documents?status=published');
     const data = await res.json();
     if (data.success) {
       const allDocs = data.data as DocumentMetadata[];
-      // Map IDs to docs, preserving order
       const docsMap = new Map(allDocs.map(d => [d.id, d]));
       articles.value = articleIds
         .map(id => docsMap.get(id))

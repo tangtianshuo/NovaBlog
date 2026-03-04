@@ -1,8 +1,9 @@
 <script setup lang="ts">
-	import { ref, onMounted, computed } from "vue"
+	import { ref, onMounted, computed, nextTick } from "vue"
 	import { useAuthStore } from "@/stores/auth"
 	import { useRoute, useRouter } from "vue-router"
 	import MarkdownViewer from "@/components/MarkdownViewer.vue"
+	import ArticleSelector from "@/components/ArticleSelector.vue"
 	import { useCyberToast } from "@/composables/useCyberToast"
 	import { apiFetch } from "@/utils/api"
 	import { syncDB } from "@/utils/syncDB"
@@ -53,7 +54,6 @@
 	const showDeleteDialog = ref(false)
 	const { success, error, danger } = useCyberToast()
 
-	// Check if editing project
 	const isEditingProject = computed(
 		() => route.name === "project-create" || route.name === "project-editor",
 	)
@@ -66,9 +66,15 @@
 
 	const fileInputRef = ref<HTMLInputElement | null>(null)
 	const uploading = ref(false)
+	const mediaInputRef = ref<HTMLInputElement | null>(null)
+	const uploadingMedia = ref(false)
 
 	const triggerUpload = () => {
 		fileInputRef.value?.click()
+	}
+
+	const triggerMediaUpload = () => {
+		mediaInputRef.value?.click()
 	}
 
 	const handleFileUpload = async (event: Event) => {
@@ -84,7 +90,6 @@
 			const res = await apiFetch("/upload", {
 				method: "POST",
 				body: formData,
-				// Content-Type header is automatically set by browser for FormData
 			})
 			const data = await res.json()
 			if (data.success) {
@@ -98,14 +103,78 @@
 			console.error(e)
 		} finally {
 			uploading.value = false
-			// Reset input
 			if (fileInputRef.value) {
 				fileInputRef.value.value = ""
 			}
 		}
 	}
 
-	// Form data
+	const handleMediaUpload = async (event: Event) => {
+		const target = event.target as HTMLInputElement
+		if (!target.files || target.files.length === 0) return
+
+		const file = target.files[0]
+
+		if (file.size > 5 * 1024 * 1024) {
+			error("文件大小不能超过 5MB")
+			return
+		}
+
+		const documentId = currentDoc.value?.metadata.id || `doc-${Date.now()}`
+		const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
+		const relativePath = `assets/${filename}`
+
+		uploadingMedia.value = true
+		try {
+			const reader = new FileReader()
+			reader.onload = async () => {
+				const base64Data = reader.result as string
+
+				await syncDB.saveMedia({
+					id: `media-${Date.now()}`,
+					documentId,
+					filename,
+					data: base64Data,
+					type: file.type,
+					size: file.size,
+					path: relativePath,
+					timestamp: Date.now(),
+				})
+
+				const markdownImage = `![${file.name}](${relativePath})`
+				insertText(markdownImage)
+
+				success("图片已保存到本地，同步到GitHub后将显示", 5000)
+			}
+			reader.readAsDataURL(file)
+		} catch (e) {
+			error("上传失败")
+			console.error(e)
+		} finally {
+			uploadingMedia.value = false
+			if (mediaInputRef.value) {
+				mediaInputRef.value.value = ""
+			}
+		}
+	}
+
+	const insertText = (text: string) => {
+		const textarea = textareaRef.value
+		if (!textarea) return
+
+		const start = textarea.selectionStart
+		const end = textarea.selectionEnd
+		const content = form.value.content
+
+		form.value.content =
+			content.substring(0, start) + text + content.substring(end)
+
+		nextTick(() => {
+			textarea.focus()
+			textarea.setSelectionRange(start + text.length, start + text.length)
+		})
+	}
+
 	const form = ref({
 		title: "",
 		content: "",
@@ -114,6 +183,7 @@
 		category: "",
 		imageUrl: "",
 		link: "",
+		articles: [] as string[],
 	})
 
 	const textareaRef = ref<HTMLTextAreaElement | null>(null)
@@ -144,6 +214,7 @@
 			category: "",
 			imageUrl: "",
 			link: "",
+			articles: [],
 		}
 	}
 
@@ -162,6 +233,7 @@
 						category: currentDoc.value.metadata.category || "",
 						imageUrl: "",
 						link: "",
+						articles: [],
 					}
 				}
 			}
@@ -185,6 +257,7 @@
 						category: "",
 						imageUrl: currentProject.value.metadata.imageUrl || "",
 						link: currentProject.value.metadata.link || "",
+						articles: currentProject.value.metadata.articles || [],
 					}
 				}
 			} else {
@@ -215,7 +288,6 @@
 			currentValue.substring(end)
 		form.value.content = newValue
 
-		// Set cursor position after inserted text
 		setTimeout(() => {
 			const newPosition = start + beforeCursor.length + text.length
 			textarea.setSelectionRange(newPosition, newPosition)
@@ -316,6 +388,10 @@
 					? String(currentProject.value.metadata.id)
 					: crypto.randomUUID()
 
+				const articlesArray = Array.isArray(form.value.articles) 
+					? [...form.value.articles] 
+					: []
+
 				await syncDB.saveProject(
 					{
 						metadata: {
@@ -327,6 +403,7 @@
 							createdAt:
 								currentProject.value?.metadata.createdAt ||
 								new Date().toISOString(),
+							articles: articlesArray,
 						},
 						content: payload.content,
 					},
@@ -668,6 +745,14 @@
 						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
 					/>
 				</div>
+
+				<div
+					v-if="isEditingProject"
+					class="col-span-2 flex flex-col gap-1"
+				>
+					<label class="text-xs text-gray-500 font-mono"> 关联文档 </label>
+					<ArticleSelector v-model="form.articles" />
+				</div>
 			</div>
 
 			<!-- Markdown Toolbar -->
@@ -800,10 +885,32 @@
 					<button
 						@click="insertImage"
 						class="p-1.5 hover:bg-cyber-primary rounded"
-						title="Image"
+						title="Image URL"
 					>
 						<Image class="w-4 h-4 text-cyber-neon" />
 					</button>
+					<button
+						@click="triggerMediaUpload"
+						class="p-1.5 hover:bg-cyber-primary rounded relative"
+						title="Upload Image"
+						:disabled="uploadingMedia"
+					>
+						<Upload
+							class="w-4 h-4"
+							:class="
+								uploadingMedia
+									? 'animate-pulse text-yellow-400'
+									: 'text-cyber-green'
+							"
+						/>
+					</button>
+					<input
+						ref="mediaInputRef"
+						type="file"
+						class="hidden"
+						accept="image/*"
+						@change="handleMediaUpload"
+					/>
 					<button
 						@click="insertTable"
 						class="p-1.5 hover:bg-cyber-primary rounded"

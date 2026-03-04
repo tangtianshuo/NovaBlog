@@ -48,6 +48,7 @@ export interface ProjectMetadata {
 	imageUrl: string
 	link?: string
 	tags: string[]
+	articles?: string[]
 	operationStatus?: OperationStatus
 	createdAt: string
 	updatedAt: string

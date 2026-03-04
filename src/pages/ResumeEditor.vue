@@ -4,6 +4,7 @@
 	import { useRouter } from "vue-router"
 	import { useCyberToast } from "@/composables/useCyberToast"
 	import { apiFetch } from "@/utils/api"
+	import { syncDB } from "@/utils/syncDB"
 	import { useI18n } from "vue-i18n"
 	import {
 		Save,
@@ -241,6 +242,8 @@
 				content: content.value,
 			}
 
+			await syncDB.saveResume(payload, "resume")
+
 			const res = await apiFetch("/resume", {
 				method: "POST",
 				headers: {
@@ -252,7 +255,9 @@
 
 			const data = await res.json()
 			if (data.success) {
-				success(t("resume.saved"))
+				success(t("resume.saved"), 5000, {
+					detail: "简历已保存到本地待同步队列，点击「同步到GitHub」上传"
+				})
 			} else {
 				error(data.error || t("resume.saveError"))
 			}
