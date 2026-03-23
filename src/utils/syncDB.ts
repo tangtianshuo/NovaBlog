@@ -43,6 +43,10 @@ export interface MediaStoreItem {
 
 class IndexedDBManager {
 	private db: IDBDatabase | null = null
+	private notifyQueueChanged = () => {
+		if (typeof window === "undefined") return
+		window.dispatchEvent(new CustomEvent("syncdb:queue-changed"))
+	}
 
 	async init(): Promise<void> {
 		return new Promise((resolve, reject) => {
@@ -95,7 +99,10 @@ class IndexedDBManager {
 			const store = transaction.objectStore("syncQueue")
 			const request = store.put(item)
 			request.onerror = () => reject(request.error)
-			request.onsuccess = () => resolve()
+			request.onsuccess = () => {
+				this.notifyQueueChanged()
+				resolve()
+			}
 		})
 	}
 
@@ -117,7 +124,10 @@ class IndexedDBManager {
 			const store = transaction.objectStore("syncQueue")
 			const request = store.clear()
 			request.onerror = () => reject(request.error)
-			request.onsuccess = () => resolve()
+			request.onsuccess = () => {
+				this.notifyQueueChanged()
+				resolve()
+			}
 		})
 	}
 
@@ -128,8 +138,64 @@ class IndexedDBManager {
 			const store = transaction.objectStore("syncQueue")
 			const request = store.delete(id)
 			request.onerror = () => reject(request.error)
-			request.onsuccess = () => resolve()
+			request.onsuccess = () => {
+				this.notifyQueueChanged()
+				resolve()
+			}
 		})
+	}
+
+	async reconcileWithRemoteIndex(remote: {
+		documents: { id: string; updatedAt?: string }[]
+		projects: { id: string; updatedAt?: string }[]
+		collections: { id: string; updatedAt?: string }[]
+	}): Promise<{ removed: number }>{
+		const docs = new Map(remote.documents.map((d) => [d.id, d.updatedAt]))
+		const projs = new Map(remote.projects.map((p) => [p.id, p.updatedAt]))
+		const cols = new Map(remote.collections.map((c) => [c.id, c.updatedAt]))
+
+		const items = await this.getQueue()
+		let removed = 0
+
+		for (const item of items) {
+			const meta = (item.data as { metadata?: { id?: string } })?.metadata
+			const entityId = (meta?.id as string | undefined) || item.id
+
+			if (item.type === "document" || item.type === "project" || item.type === "collection") {
+				const updatedAt =
+					item.type === "document"
+						? docs.get(entityId)
+						: item.type === "project"
+							? projs.get(entityId)
+							: cols.get(entityId)
+				if (!updatedAt) continue
+				const remoteTs = Date.parse(updatedAt)
+				if (Number.isFinite(remoteTs) && remoteTs >= item.timestamp) {
+					await this.removeFromQueue(item.id)
+					removed += 1
+				}
+				continue
+			}
+
+			if (item.type === "delete") {
+				const payload = item.data as { id?: string; type?: "document" | "project" | "collection" }
+				const targetId = payload?.id
+				const targetType = payload?.type
+				if (!targetId || !targetType) continue
+				const exists =
+					targetType === "document"
+						? docs.has(targetId)
+						: targetType === "project"
+							? projs.has(targetId)
+							: cols.has(targetId)
+				if (!exists) {
+					await this.removeFromQueue(item.id)
+					removed += 1
+				}
+			}
+		}
+
+		return { removed }
 	}
 
 	async getQueueCount(): Promise<number> {

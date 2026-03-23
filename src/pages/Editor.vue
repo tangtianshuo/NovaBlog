@@ -47,6 +47,8 @@
 	const currentProject = ref<Project | null>(null)
 	const loading = ref(false)
 	const saving = ref(false)
+	const autosaving = ref(false)
+	const lastAutosaveAt = ref<number | null>(null)
 	const viewMode = ref<"draft" | "published">("draft")
 	const { t } = useI18n()
 
@@ -186,6 +188,9 @@
 		articles: [] as string[],
 	})
 
+	const workingDocId = ref<string>(crypto.randomUUID())
+	const workingProjectId = ref<string>(crypto.randomUUID())
+
 	const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 	const fetchDocuments = async () => {
@@ -206,6 +211,8 @@
 	const createNew = () => {
 		currentDoc.value = null
 		currentProject.value = null
+		workingDocId.value = crypto.randomUUID()
+		workingProjectId.value = crypto.randomUUID()
 		form.value = {
 			title: t("editor.untitled"),
 			content: "",
@@ -224,6 +231,7 @@
 			const data = await res.json()
 			if (data.success) {
 				currentDoc.value = data.data
+				workingDocId.value = id
 				if (currentDoc.value) {
 					form.value = {
 						title: currentDoc.value.metadata.title,
@@ -248,6 +256,7 @@
 			const data = await res.json()
 			if (data.success) {
 				currentProject.value = data.data
+				workingProjectId.value = id
 				if (currentProject.value) {
 					form.value = {
 						title: currentProject.value.metadata.title,
@@ -265,6 +274,92 @@
 			}
 		} catch (e) {
 			error(t("editor.loadError"))
+		}
+	}
+
+	const autosaveToIndexedDB = async () => {
+		if (saving.value || loading.value || autosaving.value) return
+		autosaving.value = true
+		try {
+			if (isEditingProject.value) {
+				const projectId = currentProject.value?.metadata.id
+					? String(currentProject.value.metadata.id)
+					: workingProjectId.value
+				const payload = {
+					title: form.value.title.trim() || t("editor.untitled"),
+					content: form.value.content,
+					description: form.value.description || "",
+					tags: form.value.tags
+						.split(",")
+						.map((v) => v.trim())
+						.filter((v) => v),
+					imageUrl: form.value.imageUrl || "",
+					link: form.value.link || "",
+				}
+				const articlesArray = Array.isArray(form.value.articles) ? [...form.value.articles] : []
+				await syncDB.saveProject(
+					{
+						metadata: {
+							...payload,
+							id: projectId,
+							slug:
+								currentProject.value?.metadata.slug ||
+								payload.title.toLowerCase().replace(/\s+/g, "-"),
+							createdAt:
+								currentProject.value?.metadata.createdAt ||
+								new Date().toISOString(),
+							articles: articlesArray,
+						},
+						content: payload.content,
+					},
+					projectId,
+				)
+			} else {
+				const docId = currentDoc.value?.metadata.id
+					? String(currentDoc.value.metadata.id)
+					: workingDocId.value
+				const status =
+					(currentDoc.value?.metadata.status as "draft" | "published" | undefined) ||
+					(viewMode.value as "draft" | "published")
+				const payload = {
+					title: form.value.title.trim() || t("editor.untitled"),
+					content: form.value.content,
+					description: form.value.description || "",
+					tags: form.value.tags
+						.split(",")
+						.map((v) => v.trim())
+						.filter((v) => v),
+					category: form.value.category || "",
+					status,
+				}
+				await syncDB.saveDocument(
+					{
+						metadata: {
+							...payload,
+							id: docId,
+							slug:
+								currentDoc.value?.metadata.slug ||
+								payload.title.toLowerCase().replace(/\s+/g, "-"),
+							createdAt:
+								currentDoc.value?.metadata.createdAt ||
+								new Date().toISOString(),
+							author: currentDoc.value?.metadata.author || "admin",
+							publishedAt:
+								status === "published" &&
+								currentDoc.value?.metadata.status !== "published"
+									? new Date().toISOString()
+									: currentDoc.value?.metadata.publishedAt,
+						},
+						content: payload.content,
+					},
+					docId,
+				)
+			}
+			lastAutosaveAt.value = Date.now()
+		} catch {
+			return
+		} finally {
+			autosaving.value = false
 		}
 	}
 
@@ -548,50 +643,54 @@
 
 <template>
 	<div
-		class="flex h-screen bg-cyber-dark text-white pt-24 md:pt-16 overflow-hidden"
+		class="flex h-screen bg-base-bg text-base-text pt-6 md:pt-4 overflow-hidden"
 	>
 		<!-- Sidebar - Only show when editing documents -->
 		<aside
 			v-if="!isEditingProject"
-			class="w-64 border-r border-cyber-primary flex flex-col bg-black bg-opacity-50 flex-shrink-0"
+			class="w-64 border-r border-base-border flex flex-col bg-base-surface flex-shrink-0"
 		>
 			<div
-				class="p-4 border-b border-cyber-primary flex justify-between items-center"
+				class="p-4 border-b border-base-border flex justify-between items-center"
 			>
-				<h2 class="font-mono text-cyber-neon font-bold">
+				<h2 class="font-mono text-base-text font-bold">
 					{{ t("editor.files") }}
 				</h2>
 				<button
 					@click="createNew"
-					class="text-cyber-pink hover:text-white"
+					class="text-base-muted hover:text-cyber-neon transition-colors"
 				>
 					<Plus class="w-5 h-5" />
 				</button>
 			</div>
 
-			<div class="p-2 flex gap-2">
-				<button
-					@click="switchToDraft"
-					class="flex-1 text-xs font-mono py-1 rounded transition-colors"
-					:class="
-						viewMode === 'draft'
-							? 'bg-cyber-pink text-black'
-							: 'text-gray-500 hover:text-white'
-					"
+			<div class="p-2">
+				<div
+					class="flex gap-2 p-1 rounded-lg bg-base-surface2 border border-base-border"
 				>
-					{{ t("editor.drafts") }}
-				</button>
-				<button
-					@click="switchToPublished"
-					class="flex-1 text-xs font-mono py-1 rounded transition-colors"
-					:class="
-						viewMode === 'published'
-							? 'bg-cyber-green text-black'
-							: 'text-gray-500 hover:text-white'
-					"
-				>
-					{{ t("editor.published") }}
-				</button>
+					<button
+						@click="switchToDraft"
+						class="flex-1 text-xs font-mono py-1.5 rounded-md transition-colors"
+						:class="
+							viewMode === 'draft'
+								? 'bg-base-bg text-base-text border border-base-border'
+								: 'text-base-muted hover:text-base-text'
+						"
+					>
+						{{ t("editor.drafts") }}
+					</button>
+					<button
+						@click="switchToPublished"
+						class="flex-1 text-xs font-mono py-1.5 rounded-md transition-colors"
+						:class="
+							viewMode === 'published'
+								? 'bg-base-bg text-base-text border border-base-border'
+								: 'text-base-muted hover:text-base-text'
+						"
+					>
+						{{ t("editor.published") }}
+					</button>
+				</div>
 			</div>
 
 			<div class="flex-1 overflow-y-auto p-2 space-y-1">
@@ -599,14 +698,14 @@
 					v-for="doc in documents"
 					:key="doc.id"
 					@click="selectDocument(doc.id)"
-					class="p-2 rounded cursor-pointer hover:bg-cyber-primary transition-colors flex items-center gap-2 group"
+					class="p-2 rounded-lg cursor-pointer hover:bg-base-surface2 transition-colors flex items-center gap-2 group"
 					:class="{
-						'bg-cyber-primary border-l-2 border-cyber-neon':
+						'bg-base-surface2 border-l-2 border-cyber-neon':
 							currentDoc?.metadata.id === doc.id,
 					}"
 				>
-					<FileText class="w-4 h-4 text-gray-500 group-hover:text-cyber-neon" />
-					<span class="text-sm font-mono truncate">{{ doc.title }}</span>
+					<FileText class="w-4 h-4 text-base-muted group-hover:text-cyber-neon" />
+					<span class="text-sm font-mono truncate text-base-text">{{ doc.title }}</span>
 				</div>
 			</div>
 		</aside>
@@ -635,20 +734,25 @@
 
 			<!-- Toolbar -->
 			<div
-				class="h-14 border-b border-cyber-primary flex items-center justify-between px-4 bg-black bg-opacity-30"
+				class="h-14 border-b border-base-border flex items-center justify-between px-4 bg-base-bg"
 			>
 				<input
 					v-model="form.title"
 					type="text"
-					class="bg-transparent text-xl font-bold text-cyber-neon focus:outline-none w-full font-mono"
+					class="bg-transparent text-xl font-semibold text-base-text focus:outline-none w-full"
 					:placeholder="t('editor.placeholder.title')"
+					@blur="autosaveToIndexedDB"
 				/>
 
-				<div class="flex items-center gap-2">
+				<div class="flex items-center gap-3">
+					<div class="hidden sm:flex items-center gap-2 text-xs text-base-muted">
+						<span v-if="autosaving">{{ t('common.saving') }}</span>
+						<span v-else-if="lastAutosaveAt">{{ t('common.updated') }} {{ new Date(lastAutosaveAt).toLocaleTimeString() }}</span>
+					</div>
 					<button
 						@click="saveDocument('draft')"
 						:disabled="saving"
-						class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-pink text-cyber-pink rounded hover:bg-cyber-pink hover:text-black transition-all"
+						class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-base-surface border border-base-border text-base-text rounded-lg hover:bg-base-surface2 transition-all"
 					>
 						<Save class="w-4 h-4" /> {{ t("editor.save") }}
 					</button>
@@ -657,7 +761,7 @@
 						v-if="!isEditingProject"
 						@click="saveDocument('published')"
 						:disabled="saving"
-						class="flex items-center gap-1 px-3 py-1.5 text-xs font-mono bg-cyber-dark border border-cyber-green text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all"
+						class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-base-surface border border-base-border text-base-text rounded-lg hover:bg-base-surface2 transition-all"
 					>
 						<Send class="w-4 h-4" /> {{ t("editor.publish") }}
 					</button>
@@ -674,7 +778,7 @@
 
 			<!-- Meta Inputs -->
 			<div
-				class="grid grid-cols-2 gap-4 p-4 border-b border-cyber-primary bg-black bg-opacity-20"
+				class="grid grid-cols-2 gap-4 p-4 border-b border-base-border bg-base-surface"
 			>
 				<div class="flex flex-col gap-1">
 					<label class="text-xs text-gray-500 font-mono">{{
@@ -683,7 +787,8 @@
 					<input
 						v-model="form.description"
 						:placeholder="t('editor.placeholder.desc')"
-						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						class="bg-transparent border-b border-base-border focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						@blur="autosaveToIndexedDB"
 					/>
 				</div>
 
@@ -694,7 +799,8 @@
 					<input
 						v-model="form.tags"
 						:placeholder="t('editor.placeholder.tags')"
-						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						class="bg-transparent border-b border-base-border focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						@blur="autosaveToIndexedDB"
 					/>
 				</div>
 
@@ -709,7 +815,8 @@
 						<input
 							v-model="form.imageUrl"
 							:placeholder="t('editor.placeholder.imageUrl')"
-							class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+								class="bg-transparent border-b border-base-border focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+								@blur="autosaveToIndexedDB"
 						/>
 						<button
 							@click="triggerUpload"
@@ -742,7 +849,8 @@
 					<input
 						v-model="form.link"
 						:placeholder="t('editor.placeholder.link')"
-						class="bg-transparent border-b border-gray-700 focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						class="bg-transparent border-b border-base-border focus:border-cyber-neon text-sm p-1 focus:outline-none w-full"
+						@blur="autosaveToIndexedDB"
 					/>
 				</div>
 
@@ -757,119 +865,105 @@
 
 			<!-- Markdown Toolbar -->
 			<div
-				class="border-b border-cyber-primary bg-black bg-opacity-20 px-4 py-2 flex flex-wrap gap-1 items-center"
+				class="border-b border-base-border bg-base-surface px-4 py-2 flex flex-wrap gap-1 items-center"
 			>
-				<div
-					class="text-xs text-gray-500 font-mono mr-2 flex items-center gap-2"
-				>
-					<span>MARKDOWN</span>
-					<span
-						class="font-bold"
-						:class="isEditingProject ? 'text-cyber-pink' : 'text-cyber-neon'"
-					>
-						[{{ isEditingProject ? "PROJECT" : "ARTICLE" }}]
-					</span>
-				</div>
-
 				<!-- Headings -->
-				<div class="flex gap-1 border-r border-gray-700 pr-2">
+				<div class="flex gap-1 border-r border-base-border pr-2 mr-1">
 					<button
 						@click="insertHeading(1)"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Heading 1"
 					>
-						<Heading1 class="w-4 h-4 text-cyber-neon" />
+						<Heading1 class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertHeading(2)"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Heading 2"
 					>
-						<Heading2 class="w-4 h-4 text-cyber-neon" />
+						<Heading2 class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertHeading(3)"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Heading 3"
 					>
-						<Heading3 class="w-4 h-4 text-cyber-neon" />
+						<Heading3 class="w-4 h-4" />
 					</button>
 				</div>
 
 				<!-- Text Formatting -->
-				<div class="flex gap-1 border-r border-gray-700 pr-2">
+				<div class="flex gap-1 border-r border-base-border pr-2 mr-1">
 					<button
 						@click="insertBold"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Bold"
 					>
-						<Bold class="w-4 h-4 text-cyber-pink" />
+						<Bold class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertItalic"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Italic"
 					>
-						<Italic class="w-4 h-4 text-cyber-pink" />
+						<Italic class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertStrikethrough"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Strikethrough"
 					>
-						<Strikethrough class="w-4 h-4 text-cyber-pink" />
+						<Strikethrough class="w-4 h-4" />
 					</button>
 				</div>
 
 				<!-- Lists & Block Elements -->
-				<div class="flex gap-1 border-r border-gray-700 pr-2">
+				<div class="flex gap-1 border-r border-base-border pr-2 mr-1">
 					<button
 						@click="insertList(false)"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Bullet List"
 					>
-						<List class="w-4 h-4 text-cyber-green" />
+						<List class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertList(true)"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Numbered List"
 					>
-						<Type class="w-4 h-4 text-cyber-green" />
+						<Type class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertBlockquote"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Blockquote"
 					>
-						<Quote class="w-4 h-4 text-cyber-green" />
+						<Quote class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertHorizontalRule"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Horizontal Rule"
 					>
-						<div class="w-4 h-4 text-cyber-green font-bold">---</div>
+						<div class="w-4 h-4 font-bold flex items-center justify-center">---</div>
 					</button>
 				</div>
 
 				<!-- Code -->
-				<div class="flex gap-1 border-r border-gray-700 pr-2">
+				<div class="flex gap-1 border-r border-base-border pr-2 mr-1">
 					<button
 						@click="insertCode"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Inline Code"
 					>
-						<Code class="w-4 h-4 text-cyber-neon" />
+						<Code class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertCodeBlock"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors flex items-center justify-center"
 						title="Code Block"
 					>
-						<div class="w-4 h-4 text-cyber-neon font-mono text-xs font-bold">
-							{ }
-						</div>
+						<span class="font-mono text-xs font-bold leading-none">{ }</span>
 					</button>
 				</div>
 
@@ -877,31 +971,27 @@
 				<div class="flex gap-1">
 					<button
 						@click="insertLink"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Link"
 					>
-						<Link class="w-4 h-4 text-cyber-neon" />
+						<Link class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertImage"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Image URL"
 					>
-						<Image class="w-4 h-4 text-cyber-neon" />
+						<Image class="w-4 h-4" />
 					</button>
 					<button
 						@click="triggerMediaUpload"
-						class="p-1.5 hover:bg-cyber-primary rounded relative"
+						class="p-1.5 hover:bg-base-surface2 rounded relative text-base-text transition-colors"
 						title="Upload Image"
 						:disabled="uploadingMedia"
 					>
 						<Upload
 							class="w-4 h-4"
-							:class="
-								uploadingMedia
-									? 'animate-pulse text-yellow-400'
-									: 'text-cyber-green'
-							"
+							:class="{ 'animate-pulse text-yellow-500': uploadingMedia }"
 						/>
 					</button>
 					<input
@@ -913,17 +1003,17 @@
 					/>
 					<button
 						@click="insertTable"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Table"
 					>
-						<Table class="w-4 h-4 text-cyber-neon" />
+						<Table class="w-4 h-4" />
 					</button>
 					<button
 						@click="insertMermaid"
-						class="p-1.5 hover:bg-cyber-primary rounded"
+						class="p-1.5 hover:bg-base-surface2 rounded text-base-text transition-colors"
 						title="Flowchart"
 					>
-						<RefreshCw class="w-4 h-4 text-cyber-pink" />
+						<RefreshCw class="w-4 h-4" />
 					</button>
 				</div>
 			</div>
@@ -931,17 +1021,18 @@
 			<!-- Editor/Preview Split -->
 			<div class="flex-1 flex overflow-hidden">
 				<!-- Editor -->
-				<div class="w-1/2 border-r border-cyber-primary flex flex-col">
+				<div class="w-1/2 border-r border-base-border flex flex-col bg-base-bg">
 					<textarea
 						ref="textareaRef"
 						v-model="form.content"
-						class="flex-1 w-full bg-cyber-dark p-4 font-mono text-sm focus:outline-none resize-none"
+						class="flex-1 w-full bg-transparent p-6 font-mono text-sm focus:outline-none resize-none leading-relaxed text-base-text"
 						:placeholder="t('editor.placeholder.content')"
+						@blur="autosaveToIndexedDB"
 					></textarea>
 				</div>
 
 				<!-- Preview -->
-				<div class="w-1/2 overflow-y-auto bg-black bg-opacity-30 p-8">
+				<div class="w-1/2 overflow-y-auto bg-base-surface p-8">
 					<MarkdownViewer :content="form.content" />
 				</div>
 			</div>

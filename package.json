@@ -1,5 +1,5 @@
 {
-	"name": "NOVA_BLOG",
+	"name": "nova-core",
 	"private": true,
 	"version": "1.0.0",
 	"type": "module",

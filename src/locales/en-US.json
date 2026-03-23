@@ -11,8 +11,8 @@
 		"resume": "RESUME"
 	},
 	"home": {
-		"title": "CYBER_NEXUS",
-		"subtitle": "> INITIALIZING SYSTEM... WELCOME USER",
+		"title": "Nova Core",
+		"subtitle": "A modern hub for blog & projects with local autosave and GitHub sync",
 		"viewProjects": "VIEW PROJECTS",
 		"readDocs": "READ DOCS",
 		"resume": "RESUME",
@@ -21,7 +21,7 @@
 		"dataLogs": "DATA_LOGS",
 		"loading": "LOADING DATA...",
 		"noData": "NO DATA FOUND",
-		"footer": "SYSTEM STATUS: ONLINE | © 2026 NOVA_BLOG"
+		"footer": "Local autosave enabled · Sync to GitHub when you need"
 	},
 	"login": {
 		"title": "SYSTEM ACCESS",
@@ -90,6 +90,14 @@
 			"imageUrl": "Project Image URL",
 			"link": "Project Link"
 		}
+	},
+	"dev": {
+		"seed": "Seed test data",
+		"clearSeed": "Clear test data",
+		"seedDone": "Seeded data saved to IndexedDB",
+		"seedFailed": "Seeding failed",
+		"clearDone": "Seeded data cleared",
+		"clearFailed": "Clear failed"
 	},
 	"doc": {
 		"decrypting": "DECRYPTING DATA...",

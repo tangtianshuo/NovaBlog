@@ -12,21 +12,30 @@ export default {
 		extend: {
 			colors: {
 				cyber: {
-					primary: "#1a0033", // Deep Purple
-					neon: "#00ffff", // Neon Blue
-					green: "#39ff14", // Fluorescent Green
-					dark: "#0d0d0d", // Dark Gray
-					pink: "#ff1493", // Bright Pink
-					yellow: "#ffff00", // Neon Yellow
+					dark: "hsl(var(--bg) / <alpha-value>)",
+					primary: "hsl(var(--surface) / <alpha-value>)",
+					neon: "hsl(var(--primary) / <alpha-value>)",
+					pink: "hsl(var(--accent) / <alpha-value>)",
+					green: "hsl(var(--success) / <alpha-value>)",
+					yellow: "hsl(var(--warning) / <alpha-value>)",
+				},
+				base: {
+					bg: "hsl(var(--bg) / <alpha-value>)",
+					surface: "hsl(var(--surface) / <alpha-value>)",
+					surface2: "hsl(var(--surface2) / <alpha-value>)",
+					text: "hsl(var(--text) / <alpha-value>)",
+					muted: "hsl(var(--muted) / <alpha-value>)",
+					border: "hsl(var(--border) / <alpha-value>)",
 				},
 			},
 			fontFamily: {
-				mono: ["Courier New", "Courier", "monospace"],
+				mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+				sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica", "Arial", "Apple Color Emoji", "Segoe UI Emoji"],
 			},
 			boxShadow: {
-				neon: "0 0 5px #00ffff, 0 0 10px #00ffff",
-				"neon-green": "0 0 5px #39ff14, 0 0 10px #39ff14",
-				"neon-pink": "0 0 5px #ff1493, 0 0 10px #ff1493",
+				neon: "0 10px 30px rgba(0, 212, 255, 0.18)",
+				"neon-green": "0 10px 30px rgba(16, 185, 129, 0.18)",
+				"neon-pink": "0 10px 30px rgba(99, 102, 241, 0.18)",
 			},
 		},
 	},

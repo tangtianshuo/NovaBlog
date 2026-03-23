@@ -49,13 +49,13 @@
 <template>
 	<div
 		v-if="route.path !== '/'"
-		class="fixed top-[100px] md:top-[53px] left-0 w-full z-40 bg-black bg-opacity-80 backdrop-blur border-b border-gray-800"
+		class="sticky top-[56px] left-0 w-full z-40 bg-base-bg/80 backdrop-blur border-b border-base-border"
 	>
-		<div class="container mx-auto px-4 py-4 flex items-center justify-between">
-			<div class="flex items-center text-sm font-mono text-gray-400">
+		<div class="container mx-auto px-4 py-3 flex items-center justify-between">
+			<div class="flex items-center text-sm text-base-muted">
 				<router-link
 					to="/"
-					class="hover:text-cyber-neon transition-colors flex items-center"
+					class="hover:text-base-text transition-colors flex items-center"
 				>
 					<Home class="w-4 h-4 mr-1" />
 				</router-link>
@@ -66,14 +66,14 @@
 				>
 					<ChevronRight
 						v-if="index > 0"
-						class="w-4 h-4 mx-2 text-gray-600"
+						class="w-4 h-4 mx-2 text-base-border"
 					/>
 					<router-link
 						v-if="index > 0"
 						:to="item.path"
-						class="hover:text-cyber-neon transition-colors"
+						class="hover:text-base-text transition-colors"
 						:class="{
-							'text-cyber-neon font-bold': index === breadcrumbs.length - 1,
+							'text-base-text font-semibold': index === breadcrumbs.length - 1,
 						}"
 					>
 						{{ item.name }}
@@ -84,7 +84,7 @@
 			<button
 				v-if="showBack"
 				@click="goBack"
-				class="flex items-center text-xs font-mono text-cyber-pink hover:text-white transition-colors border border-cyber-pink px-2 py-1 rounded hover:bg-cyber-pink hover:bg-opacity-20"
+				class="flex items-center text-xs font-semibold text-base-text transition-colors border border-base-border px-3 py-1.5 rounded-lg hover:bg-base-surface"
 			>
 				<ArrowLeft class="w-3 h-3 mr-1" />
 				{{ t("project.back") }}

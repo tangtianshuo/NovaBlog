@@ -3,6 +3,7 @@
 	import MarkdownIt from "markdown-it"
 	import hljs from "highlight.js"
 	import "highlight.js/styles/atom-one-dark.css"
+	import { useTheme } from "@/composables/useTheme"
 
 	const props = defineProps<{
 		content: string
@@ -35,6 +36,7 @@
 	})
 
 	const previewRef = ref<HTMLElement | null>(null)
+	const { isDark } = useTheme()
 
 	const renderMermaid = async () => {
 		await nextTick()
@@ -46,7 +48,7 @@
 
 		await mermaid.initialize({
 			startOnLoad: false,
-			theme: "dark",
+			theme: isDark.value ? "dark" : "default",
 			securityLevel: "loose",
 		})
 
@@ -83,6 +85,13 @@
 		{ flush: "post" },
 	)
 
+	watch(
+		() => isDark.value,
+		() => {
+			renderMermaid()
+		},
+	)
+
 	onMounted(() => {
 		renderMermaid()
 	})
@@ -91,65 +100,87 @@
 <template>
 	<div
 		ref="previewRef"
-		class="markdown-body prose prose-invert prose-cyber max-w-none"
+		class="markdown-body prose max-w-none dark:prose-invert"
 		v-html="htmlContent"
 	></div>
 </template>
 
 <style>
-	/* Custom prose styles for Cyberpunk theme */
-	.prose-cyber {
-		color: #e5e7eb;
+	.markdown-body {
+		--tw-prose-body: hsl(var(--text));
+		--tw-prose-headings: hsl(var(--text));
+		--tw-prose-lead: hsl(var(--text));
+		--tw-prose-links: hsl(var(--accent));
+		--tw-prose-bold: hsl(var(--text));
+		--tw-prose-counters: hsl(var(--muted));
+		--tw-prose-bullets: hsl(var(--muted));
+		--tw-prose-hr: hsl(var(--border));
+		--tw-prose-quotes: hsl(var(--text));
+		--tw-prose-quote-borders: hsl(var(--border));
+		--tw-prose-captions: hsl(var(--muted));
+		--tw-prose-code: hsl(var(--text));
+		--tw-prose-pre-code: hsl(var(--text));
+		--tw-prose-pre-bg: hsl(var(--surface));
+		--tw-prose-th-borders: hsl(var(--border));
+		--tw-prose-td-borders: hsl(var(--border));
 	}
 
-	.prose-cyber h1,
-	.prose-cyber h2,
-	.prose-cyber h3,
-	.prose-cyber h4 {
-		color: #00ffff;
-		font-family: "Courier New", Courier, monospace;
+	.dark .markdown-body {
+		--tw-prose-invert-body: hsl(var(--text));
+		--tw-prose-invert-headings: hsl(var(--text));
+		--tw-prose-invert-lead: hsl(var(--text));
+		--tw-prose-invert-links: hsl(var(--primary));
+		--tw-prose-invert-bold: hsl(var(--text));
+		--tw-prose-invert-counters: hsl(var(--muted));
+		--tw-prose-invert-bullets: hsl(var(--muted));
+		--tw-prose-invert-hr: hsl(var(--border));
+		--tw-prose-invert-quotes: hsl(var(--text));
+		--tw-prose-invert-quote-borders: hsl(var(--border));
+		--tw-prose-invert-captions: hsl(var(--muted));
+		--tw-prose-invert-code: hsl(var(--text));
+		--tw-prose-invert-pre-code: hsl(var(--text));
+		--tw-prose-invert-pre-bg: hsl(var(--surface));
+		--tw-prose-invert-th-borders: hsl(var(--border));
+		--tw-prose-invert-td-borders: hsl(var(--border));
 	}
 
-	.prose-cyber a {
-		color: #ff1493;
-		text-decoration: none;
-		border-bottom: 1px dashed #ff1493;
+	.markdown-body a {
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 3px;
 	}
 
-	.prose-cyber a:hover {
-		color: #39ff14;
-		border-color: #39ff14;
+	.markdown-body a:hover {
+		color: hsl(var(--primary));
 	}
 
-	.prose-cyber code {
-		color: #39ff14;
-		background-color: #0d0d0d;
-		padding: 0.2em 0.4em;
-		border-radius: 0.25rem;
-		font-family: "Courier New", Courier, monospace;
+	.markdown-body :not(pre) > code {
+		background: hsl(var(--surface2));
+		border: 1px solid hsl(var(--border));
+		border-radius: 0.5rem;
+		padding: 0.12rem 0.4rem;
+		font-weight: 600;
 	}
 
-	.prose-cyber pre {
-		background-color: #0d0d0d;
-		border: 1px solid #1a0033;
+	.markdown-body pre.hljs {
+		border-radius: 1rem;
+		border: 1px solid hsl(var(--border));
+		background: hsl(var(--surface));
+		overflow-x: auto;
+		padding: 1rem 1.25rem;
 	}
 
-	.prose-cyber blockquote {
-		border-left-color: #00ffff;
-		color: #9ca3af;
-		background: rgba(26, 0, 51, 0.3);
+	.markdown-body blockquote {
+		border-left-color: hsl(var(--primary));
+		background: hsl(var(--surface2));
+		border-radius: 0.75rem;
 		padding: 1rem;
 	}
 
-	.prose-cyber strong {
-		color: #00ffff;
-	}
-
-	/* Mermaid diagram styling */
-	.prose-cyber .mermaid {
-		background-color: rgba(13, 13, 13, 0.5);
-		border-radius: 8px;
+	.markdown-body .mermaid {
+		background: hsl(var(--surface));
+		border: 1px solid hsl(var(--border));
+		border-radius: 1rem;
 		padding: 1rem;
-		margin: 1rem 0;
 	}
 </style>

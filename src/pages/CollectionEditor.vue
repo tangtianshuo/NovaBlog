@@ -19,6 +19,8 @@
 
 	const loading = ref(true)
 	const saving = ref(false)
+	const autosaving = ref(false)
+	const lastAutosaveAt = ref<number | null>(null)
 	const showDeleteDialog = ref(false)
 
 	const form = ref({
@@ -30,9 +32,11 @@
 	})
 
 	const isNew = computed(() => !route.params.id)
+	const workingCollectionId = ref<string>(crypto.randomUUID())
 
 	const fetchCollection = async () => {
 		if (isNew.value) {
+			workingCollectionId.value = crypto.randomUUID()
 			loading.value = false
 			return
 		}
@@ -42,6 +46,7 @@
 			await collectionStore.fetchCollection(id)
 			const collection = collectionStore.currentCollection
 			if (collection) {
+				workingCollectionId.value = String(route.params.id)
 				form.value = {
 					title: collection.metadata.title,
 					description: collection.metadata.description,
@@ -54,6 +59,35 @@
 			error(t("editor.loadError"))
 		} finally {
 			loading.value = false
+		}
+	}
+
+	const autosaveToIndexedDB = async () => {
+		if (saving.value || loading.value || autosaving.value) return
+		autosaving.value = true
+		try {
+			const collectionId = isNew.value ? workingCollectionId.value : String(route.params.id)
+			const articlesArray = Array.isArray(form.value.articles) ? [...form.value.articles] : []
+			await syncDB.saveCollection(
+				{
+					metadata: {
+						id: collectionId,
+						title: form.value.title || "Untitled",
+						slug: (form.value.title || "untitled").toLowerCase().replace(/\s+/g, "-"),
+						description: form.value.description,
+						coverImage: form.value.coverImage,
+						articles: articlesArray,
+						createdAt: isNew.value
+							? new Date().toISOString()
+							: collectionStore.currentCollection?.metadata.createdAt,
+					},
+					content: form.value.content,
+				},
+				collectionId,
+			)
+			lastAutosaveAt.value = Date.now()
+		} finally {
+			autosaving.value = false
 		}
 	}
 
@@ -157,22 +191,22 @@
 
 <template>
 	<div
-		class="flex h-screen bg-cyber-dark text-white py-6 md:pt-20 overflow-hidden"
+		class="flex h-screen bg-base-bg text-base-text py-6 md:pt-8 overflow-hidden"
 	>
 		<!-- Main Content -->
 		<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 			<!-- Header -->
 			<div
-				class="h-16 border-b border-cyber-primary flex items-center justify-between px-6 bg-black bg-opacity-30 flex-shrink-0"
+				class="h-16 border-b border-base-border flex items-center justify-between px-6 bg-base-bg flex-shrink-0"
 			>
 				<div class="flex items-center gap-4">
 					<button
 						@click="router.push('/admin#collections')"
-						class="text-gray-500 hover:text-cyber-neon transition-colors"
+						class="text-base-muted hover:text-base-text transition-colors"
 					>
 						<ArrowLeft class="w-5 h-5" />
 					</button>
-					<h1 class="text-xl font-mono font-bold text-cyber-neon">
+					<h1 class="text-xl font-bold tracking-tight text-base-text">
 						{{
 							isNew ? t("admin.createCollection") : t("admin.editCollection")
 						}}
@@ -180,10 +214,14 @@
 				</div>
 
 				<div class="flex items-center gap-3">
+					<div class="hidden sm:flex items-center text-xs text-base-muted">
+						<span v-if="autosaving">{{ t('common.saving') }}</span>
+						<span v-else-if="lastAutosaveAt">{{ t('common.updated') }} {{ new Date(lastAutosaveAt).toLocaleTimeString() }}</span>
+					</div>
 					<button
 						v-if="!isNew"
 						@click="deleteCollection"
-						class="flex items-center gap-2 px-4 py-2 text-sm font-mono text-gray-500 hover:text-red-500 transition-colors"
+						class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-base-muted hover:text-red-500 transition-colors rounded-xl hover:bg-base-surface"
 					>
 						<Trash2 class="w-4 h-4" />
 						<span>{{ t("admin.delete") }}</span>
@@ -191,7 +229,7 @@
 					<button
 						@click="saveCollection"
 						:disabled="saving"
-						class="flex items-center gap-2 px-6 py-2 bg-cyber-neon text-black font-bold font-mono rounded hover:bg-white transition-all disabled:opacity-50"
+						class="flex items-center gap-2 px-6 py-2 bg-base-surface border border-base-border text-base-text font-semibold rounded-xl hover:bg-base-surface2 transition-all disabled:opacity-50"
 					>
 						<Save class="w-4 h-4" />
 						<span>{{ saving ? t("common.saving") : t("editor.save") }}</span>
@@ -203,46 +241,49 @@
 			<div class="flex-1 flex overflow-hidden">
 				<!-- Left Panel: Metadata & Articles -->
 				<div
-					class="w-1/3 min-w-[350px] max-w-[500px] border-r border-cyber-primary flex flex-col overflow-y-auto bg-black bg-opacity-20 p-6 gap-6"
+					class="w-1/3 min-w-[350px] max-w-[500px] border-r border-base-border flex flex-col overflow-y-auto bg-base-surface/50 p-6 gap-6"
 				>
 					<!-- Metadata Form -->
 					<div class="space-y-4">
 						<div class="flex flex-col gap-2">
-							<label class="text-sm font-mono text-cyber-neon">Title</label>
+							<label class="text-xs text-base-muted font-medium uppercase tracking-wider">Title</label>
 							<input
 								v-model="form.title"
 								type="text"
-								class="bg-cyber-dark border border-gray-700 rounded px-3 py-2 focus:border-cyber-neon focus:outline-none transition-colors"
+								class="bg-base-bg border border-base-border rounded-xl px-3 py-2 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon focus:outline-none transition-all text-sm text-base-text"
 								placeholder="Collection Title"
+								@blur="autosaveToIndexedDB"
 							/>
 						</div>
 
 						<div class="flex flex-col gap-2">
-							<label class="text-sm font-mono text-cyber-neon"
+							<label class="text-xs text-base-muted font-medium uppercase tracking-wider"
 								>Description</label
 							>
 							<textarea
 								v-model="form.description"
 								rows="3"
-								class="bg-cyber-dark border border-gray-700 rounded px-3 py-2 focus:border-cyber-neon focus:outline-none transition-colors resize-none"
+								class="bg-base-bg border border-base-border rounded-xl px-3 py-2 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon focus:outline-none transition-all resize-none text-sm text-base-text"
 								placeholder="Brief description..."
+								@blur="autosaveToIndexedDB"
 							></textarea>
 						</div>
 
 						<div class="flex flex-col gap-2">
-							<label class="text-sm font-mono text-cyber-neon"
+							<label class="text-xs text-base-muted font-medium uppercase tracking-wider"
 								>Cover Image</label
 							>
 							<div class="flex gap-2">
 								<input
 									v-model="form.coverImage"
 									type="text"
-									class="flex-1 bg-cyber-dark border border-gray-700 rounded px-3 py-2 focus:border-cyber-neon focus:outline-none text-sm"
+									class="flex-1 bg-base-bg border border-base-border rounded-xl px-3 py-2 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon focus:outline-none transition-all text-sm text-base-text"
 									placeholder="Image URL"
+									@blur="autosaveToIndexedDB"
 								/>
 								<button
 									@click="triggerUpload"
-									class="p-2 border border-gray-700 rounded hover:border-cyber-neon hover:text-cyber-neon transition-colors"
+									class="p-2 border border-base-border rounded-xl hover:border-cyber-neon hover:text-cyber-neon transition-colors bg-base-bg text-base-muted"
 									:disabled="uploading"
 								>
 									<Upload
@@ -260,7 +301,7 @@
 							</div>
 							<div
 								v-if="form.coverImage"
-								class="mt-2 h-32 rounded overflow-hidden border border-gray-700"
+								class="mt-2 h-32 rounded-xl overflow-hidden border border-base-border"
 							>
 								<img
 									:src="form.coverImage"
@@ -272,7 +313,7 @@
 
 					<!-- Article Selector -->
 					<div class="flex-1 flex flex-col min-h-[300px]">
-						<label class="text-sm font-mono text-cyber-neon mb-2"
+						<label class="text-xs text-base-muted font-medium uppercase tracking-wider mb-2"
 							>Articles</label
 						>
 						<ArticleSelector v-model="form.articles" />
@@ -280,20 +321,21 @@
 				</div>
 
 				<!-- Right Panel: Content Editor -->
-				<div class="flex-1 flex flex-col bg-cyber-dark">
+				<div class="flex-1 flex flex-col bg-base-bg">
 					<div
-						class="border-b border-cyber-primary px-4 py-2 bg-black bg-opacity-30 text-xs font-mono text-gray-500"
+						class="border-b border-base-border px-6 py-3 bg-base-surface text-xs font-medium tracking-wider text-base-muted uppercase"
 					>
-						COLLECTION INTRO (MARKDOWN)
+						Collection Intro (Markdown)
 					</div>
 					<div class="flex-1 flex">
 						<textarea
 							v-model="form.content"
-							class="flex-1 bg-transparent p-6 font-mono text-sm focus:outline-none resize-none"
+							class="flex-1 bg-transparent p-6 font-mono text-sm focus:outline-none resize-none text-base-text leading-relaxed"
 							placeholder="# Introduction&#10;&#10;Write a comprehensive introduction for this collection..."
+							@blur="autosaveToIndexedDB"
 						></textarea>
 						<div
-							class="flex-1 border-l border-cyber-primary bg-black bg-opacity-10 p-6 overflow-y-auto"
+							class="flex-1 border-l border-base-border bg-base-surface/30 p-8 overflow-y-auto"
 						>
 							<MarkdownViewer :content="form.content" />
 						</div>

@@ -11,8 +11,8 @@
 		"resume": "简历"
 	},
 	"home": {
-		"title": "赛博枢纽",
-		"subtitle": "> 系统初始化... 欢迎用户",
+		"title": "Nova Core",
+		"subtitle": "本地自动保存 + GitHub 同步的博客与项目中枢",
 		"viewProjects": "查看项目",
 		"readDocs": "阅读文档",
 		"collections": "合集展示",
@@ -21,7 +21,7 @@
 		"resume": "我的简历",
 		"loading": "数据加载中...",
 		"noData": "未发现数据",
-		"footer": "系统状态：在线 | © 2026 新星博客"
+		"footer": "本地自动保存已启用 · 需要时一键同步到 GitHub"
 	},
 	"login": {
 		"title": "系统接入",
@@ -91,6 +91,14 @@
 			"imageUrl": "项目图片URL",
 			"link": "项目链接"
 		}
+	},
+	"dev": {
+		"seed": "填充测试数据",
+		"clearSeed": "清除测试数据",
+		"seedDone": "测试数据已写入本地 IndexedDB",
+		"seedFailed": "填充失败",
+		"clearDone": "测试数据已清除",
+		"clearFailed": "清除失败"
 	},
 	"doc": {
 		"decrypting": "解密数据中...",

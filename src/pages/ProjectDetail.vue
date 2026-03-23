@@ -8,6 +8,7 @@ import { ExternalLink, ArrowLeft } from 'lucide-vue-next';
 import type { Project, DocumentMetadata } from '../../api/types';
 import { apiFetch } from '@/utils/api';
 import { useI18n } from 'vue-i18n';
+import { syncDB } from '@/utils/syncDB';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,16 +37,43 @@ const fetchProject = async () => {
               docs.push(docData.data.metadata);
             }
           } catch (e) {
-            console.error('Failed to fetch doc:', docId, e);
+				try {
+					const local = await syncDB.getLocalItemById(String(docId));
+					if (local && local.type === 'document') {
+						docs.push(local.metadata as any);
+					}
+				} catch {
+					console.error('Failed to fetch doc:', docId, e);
+				}
           }
         }
         relatedDocs.value = docs;
       }
     } else {
-      error(t('project.loadError'));
+		const local = await syncDB.getLocalItemById(String(route.params.id));
+		if (local && local.type === 'project') {
+			project.value = {
+				metadata: local.metadata as any,
+				content: local.content || '',
+			};
+		} else {
+			error(t('project.loadError'));
+		}
     }
   } catch (e) {
-    error(t('project.loadError'));
+		try {
+			const local = await syncDB.getLocalItemById(String(route.params.id));
+			if (local && local.type === 'project') {
+				project.value = {
+					metadata: local.metadata as any,
+					content: local.content || '',
+				};
+			} else {
+				error(t('project.loadError'));
+			}
+		} catch {
+			error(t('project.loadError'));
+		}
   } finally {
     loading.value = false;
   }

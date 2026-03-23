@@ -409,7 +409,7 @@
 </script>
 
 <template>
-	<div class="min-h-screen bg-cyber-dark text-white pt-20 px-4">
+	<div class="min-h-screen bg-base-bg text-base-text pt-20 px-4">
 		<div class="container mx-auto">
 			<div class="flex items-center justify-between mb-8">
 				<h1 class="text-3xl font-bold text-cyber-neon font-mono">
@@ -513,7 +513,7 @@
 			<!-- Documents Tab -->
 			<div
 				v-if="activeTab === 'documents'"
-				class="bg-black bg-opacity-50 border border-cyber-primary rounded overflow-hidden"
+				class="bg-base-surface border border-base-border rounded-2xl overflow-hidden"
 			>
 				<table class="w-full text-left border-collapse">
 					<thead>
@@ -627,7 +627,7 @@
 			<!-- Trash Tab -->
 			<div
 				v-if="activeTab === 'trash'"
-				class="bg-black bg-opacity-50 border border-cyber-primary rounded overflow-hidden"
+				class="bg-base-surface border border-base-border rounded-2xl overflow-hidden"
 			>
 				<div
 					class="flex justify-between items-center p-4 border-b border-gray-700"

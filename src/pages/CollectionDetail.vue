@@ -6,6 +6,7 @@ import type { Collection, DocumentMetadata } from '../../api/types';
 import { useI18n } from 'vue-i18n';
 import MarkdownViewer from '@/components/MarkdownViewer.vue';
 import { Layers, Calendar, ArrowRight } from 'lucide-vue-next';
+import { syncDB } from '@/utils/syncDB';
 
 const route = useRoute();
 const { t, locale } = useI18n();
@@ -23,10 +24,32 @@ const fetchCollection = async () => {
       collection.value = data.data;
       await fetchArticles(data.data.metadata.articles);
     } else {
-      error.value = data.error;
+		const local = await syncDB.getLocalItemById(String(id));
+		if (local && local.type === 'collection') {
+			collection.value = {
+				metadata: local.metadata as any,
+				content: local.content || '',
+			};
+			await fetchArticles((collection.value.metadata as any).articles || []);
+		} else {
+			error.value = data.error;
+		}
     }
   } catch (e) {
-    error.value = 'Failed to fetch collection';
+		try {
+			const local = await syncDB.getLocalItemById(String(id));
+			if (local && local.type === 'collection') {
+				collection.value = {
+					metadata: local.metadata as any,
+					content: local.content || '',
+				};
+				await fetchArticles((collection.value.metadata as any).articles || []);
+				return;
+			}
+		} catch {
+			return;
+		}
+		error.value = 'Failed to fetch collection';
   } finally {
     loading.value = false;
   }
@@ -36,15 +59,21 @@ const fetchArticles = async (articleIds: string[]) => {
   if (!articleIds || articleIds.length === 0) return;
   
   try {
-    const res = await apiFetch('/documents?status=published');
-    const data = await res.json();
-    if (data.success) {
-      const allDocs = data.data as DocumentMetadata[];
-      const docsMap = new Map(allDocs.map(d => [d.id, d]));
-      articles.value = articleIds
-        .map(id => docsMap.get(id))
-        .filter((d): d is DocumentMetadata => !!d);
-    }
+		const [res, localDocs] = await Promise.all([
+			apiFetch('/documents?status=published'),
+			syncDB.getLocalDocuments(),
+		]);
+		const data = await res.json();
+		const remoteDocs = data?.success ? (data.data as DocumentMetadata[]) : [];
+		const localPublished = localDocs
+			.filter((d) => (d.metadata as any)?.status === 'published')
+			.map((d) => d.metadata as any as DocumentMetadata);
+		const merged = new Map<string, DocumentMetadata>();
+		for (const d of localPublished) merged.set(d.id, d);
+		for (const d of remoteDocs) merged.set(d.id, d);
+		articles.value = articleIds
+			.map((id) => merged.get(id))
+			.filter((d): d is DocumentMetadata => !!d);
   } catch (e) {
     console.error('Failed to fetch articles', e);
   }
@@ -64,7 +93,7 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-cyber-dark text-white font-sans pt-20 px-4">
+  <div class="min-h-screen bg-base-bg text-base-text font-sans pt-20 px-4">
     <div v-if="loading" class="flex justify-center items-center py-20">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyber-green"></div>
     </div>
