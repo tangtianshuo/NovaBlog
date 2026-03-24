@@ -26,7 +26,7 @@
       "destination": "/api/uploads/$1"
     },
     {
-      "source": "/((?!api/|uploads/|assets/|.*\\..*).*)",
+      "source": "/((?!api/|uploads/|assets/).*)",
       "destination": "/index.html"
     }
   ],
