@@ -2,6 +2,7 @@
 import type { CollectionMetadata } from '../../api/types';
 import { Layers, Calendar } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
+import { withBaseUrl } from '@/utils/asset-utils';
 
 const props = defineProps<{
   collection: CollectionMetadata;
@@ -35,7 +36,7 @@ const formatDate = (date: string) => {
 
       <div class="card-image h-48 overflow-hidden bg-gray-900 relative group">
         <img 
-          :src="collection.coverImage || '/images/default-project.png'" 
+          :src="collection.coverImage || withBaseUrl('images/default-project.png')" 
           :alt="collection.title" 
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />

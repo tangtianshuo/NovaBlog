@@ -18,6 +18,8 @@ import collectionsRoutes from "./routes/collections.js"
 import uploadRoutes from "./routes/upload.js"
 import resumeRoutes from "./routes/resume.js"
 import syncRoutes from "./routes/sync.js"
+import mediaRoutes from "./routes/media.js"
+import uploadsRoutes from "./routes/uploads.js"
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -44,8 +46,10 @@ app.use("/api/documents", documentsRoutes)
 app.use("/api/projects", projectsRoutes)
 app.use("/api/collections", collectionsRoutes)
 app.use("/api/upload", uploadRoutes)
+app.use("/api/uploads", uploadsRoutes)
 app.use("/api/resume", resumeRoutes)
 app.use("/api/sync", syncRoutes)
+app.use("/api/media", mediaRoutes)
 
 /**
  * health

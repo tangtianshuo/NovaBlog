@@ -109,6 +109,7 @@ router.post(
 							await createOrUpdateFile({
 								path: mediaPath,
 								content: buffer.toString("base64"),
+								encoding: "base64",
 								message: `上传媒体文件: ${media.filename}`,
 							})
 						} catch (mediaError) {

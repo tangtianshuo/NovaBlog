@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import { syncDB } from '@/utils/syncDB';
+import { withBaseUrl } from '@/utils/asset-utils';
 
 const collectionStore = useCollectionStore();
 const router = useRouter();
@@ -105,7 +106,7 @@ onMounted(() => {
           class="collection-item"
         >
           <div class="collection-image">
-            <img :src="collection.coverImage || '/images/default-project.png'" :alt="collection.title" />
+				<img :src="collection.coverImage || withBaseUrl('images/default-project.png')" :alt="collection.title" />
           </div>
           <div class="collection-info">
             <h3 class="collection-title">

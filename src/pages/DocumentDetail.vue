@@ -126,7 +126,7 @@ onMounted(async () => {
         
         <!-- Content -->
         <main class="bg-base-surface p-4 md:p-8 rounded-2xl border border-base-border shadow-sm">
-          <MarkdownViewer :content="document.content" />
+          <MarkdownViewer :content="document.content" :asset-base-url="`/api/media/${encodeURIComponent(document.metadata.id)}/`" />
         </main>
       </article>
     </div>

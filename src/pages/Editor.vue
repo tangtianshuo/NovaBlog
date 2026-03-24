@@ -122,9 +122,12 @@
 			return
 		}
 
-		const documentId = currentDoc.value?.metadata.id || `doc-${Date.now()}`
+		const documentId = currentDoc.value?.metadata.id
+			? String(currentDoc.value.metadata.id)
+			: workingDocId.value || `doc-${Date.now()}`
 		const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
 		const relativePath = `assets/${filename}`
+		const publicPath = `/api/media/${encodeURIComponent(documentId)}/${encodeURIComponent(filename)}`
 
 		uploadingMedia.value = true
 		try {
@@ -139,11 +142,11 @@
 					data: base64Data,
 					type: file.type,
 					size: file.size,
-					path: relativePath,
+					path: publicPath,
 					timestamp: Date.now(),
 				})
 
-				const markdownImage = `![${file.name}](${relativePath})`
+				const markdownImage = `![${file.name}](${publicPath})`
 				insertText(markdownImage)
 
 				success("图片已保存到本地，同步到GitHub后将显示", 5000)
@@ -190,6 +193,13 @@
 
 	const workingDocId = ref<string>(crypto.randomUUID())
 	const workingProjectId = ref<string>(crypto.randomUUID())
+	const documentAssetBaseUrl = computed(() => {
+		if (isEditingProject.value) return undefined
+		const id = currentDoc.value?.metadata.id
+			? String(currentDoc.value.metadata.id)
+			: workingDocId.value
+		return id ? `/api/media/${encodeURIComponent(id)}/` : undefined
+	})
 
 	const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
@@ -1033,7 +1043,7 @@
 
 				<!-- Preview -->
 				<div class="w-1/2 overflow-y-auto bg-base-surface p-8">
-					<MarkdownViewer :content="form.content" />
+					<MarkdownViewer :content="form.content" :asset-base-url="documentAssetBaseUrl" />
 				</div>
 			</div>
 		</main>

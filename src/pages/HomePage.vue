@@ -7,6 +7,7 @@
 	import { apiFetch } from "@/utils/api"
 	import { FolderKanban, Newspaper } from "lucide-vue-next"
 	import { syncDB, type LocalItem } from "@/utils/syncDB"
+	import { withBaseUrl } from "@/utils/asset-utils"
 
 	const { t } = useI18n()
 	const documents = ref<DocumentMetadata[]>([])
@@ -82,7 +83,7 @@
 					createdAt: String(metadata?.createdAt || new Date(p.timestamp).toISOString()),
 					updatedAt: String(metadata?.updatedAt || new Date(p.timestamp).toISOString()),
 					tags: Array.isArray(metadata?.tags) ? metadata.tags : [],
-					imageUrl: String(metadata?.imageUrl || "/images/default-project.png"),
+					imageUrl: String(metadata?.imageUrl || withBaseUrl("images/default-project.png")),
 				} as ProjectMetadata
 			})
 
@@ -182,7 +183,7 @@
 						v-else
 						:title="(item as any).title"
 						:description="(item as any).description"
-						:image="(item as any).imageUrl || '/images/default-project.png'"
+						:image="(item as any).imageUrl || withBaseUrl('images/default-project.png')"
 						:link="(item as any).link"
 						:tags="(item as any).tags"
 						:projectId="(item as any).id"

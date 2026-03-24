@@ -7,6 +7,7 @@
 
 	const props = defineProps<{
 		content: string
+		assetBaseUrl?: string
 	}>()
 
 	const md = new MarkdownIt({
@@ -31,8 +32,25 @@
 		},
 	})
 
+	const defaultImageRule = md.renderer.rules.image
+	md.renderer.rules.image = (tokens, idx, options, env: any, self) => {
+		const token = tokens[idx]
+		const src = token.attrGet("src")
+		const assetBaseUrl = typeof env?.assetBaseUrl === "string" ? env.assetBaseUrl : undefined
+		if (assetBaseUrl && src) {
+			const normalized = src.startsWith("./") ? src.slice(2) : src
+			if (normalized.startsWith("assets/")) {
+				const filename = normalized.slice("assets/".length)
+				const base = assetBaseUrl.endsWith("/") ? assetBaseUrl : `${assetBaseUrl}/`
+				token.attrSet("src", `${base}${filename}`)
+			}
+		}
+		if (defaultImageRule) return defaultImageRule(tokens, idx, options, env, self)
+		return self.renderToken(tokens, idx, options)
+	}
+
 	const htmlContent = computed(() => {
-		return md.render(props.content || "")
+		return md.render(props.content || "", { assetBaseUrl: props.assetBaseUrl })
 	})
 
 	const previewRef = ref<HTMLElement | null>(null)

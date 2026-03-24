@@ -92,14 +92,6 @@
 			"link": "项目链接"
 		}
 	},
-	"dev": {
-		"seed": "填充测试数据",
-		"clearSeed": "清除测试数据",
-		"seedDone": "测试数据已写入本地 IndexedDB",
-		"seedFailed": "填充失败",
-		"clearDone": "测试数据已清除",
-		"clearFailed": "清除失败"
-	},
 	"doc": {
 		"decrypting": "解密数据中...",
 		"notFound": "错误：数据损坏或未找到",

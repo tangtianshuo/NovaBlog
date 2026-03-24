@@ -7,6 +7,7 @@
 	import { apiFetch } from "@/utils/api"
 	import { ArrowLeft } from "lucide-vue-next"
 	import { useTheme } from "@/composables/useTheme"
+	import { withBaseUrl } from '@/utils/asset-utils';
 
 	const username = ref("")
 	const password = ref("")
@@ -68,7 +69,7 @@
 
 		<!-- Logo -->
 		<div class="fixed top-6 right-6 z-50 flex items-center gap-3">
-			<img :src="isDark ? '/logo-lite.png' : '/logo.png'" alt="Nova Core" class="w-8 h-8 rounded" />
+			<img :src="withBaseUrl(isDark ? 'logo-lite.png' : 'logo.png')" alt="Nova Core" class="w-8 h-8 rounded" />
 			<span class="text-xl font-bold tracking-tight text-base-text hidden sm:inline">Nova Core</span>
 		</div>
 

@@ -11,6 +11,7 @@ interface GitHubFile {
 	path: string
 	message: string
 	sha?: string
+	encoding?: "utf8" | "base64"
 }
 
 async function getHeaders() {
@@ -67,6 +68,33 @@ export async function getFile(path: string): Promise<string | null> {
 	}
 }
 
+export async function getFileBuffer(path: string): Promise<Buffer | null> {
+	if (!TOKEN || !OWNER || !REPO) {
+		console.warn("GitHub sync not configured")
+		return null
+	}
+
+	try {
+		const response = await fetch(
+			`${GITHUB_API_BASE}/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
+			{
+				headers: await getHeaders(),
+			},
+		)
+
+		if (!response.ok) {
+			if (response.status === 404) return null
+			throw new Error(`GitHub API error: ${response.status}`)
+		}
+
+		const data = await response.json()
+		return Buffer.from(data.content, "base64")
+	} catch (error) {
+		console.error("Error fetching file buffer from GitHub:", error)
+		return null
+	}
+}
+
 export async function createOrUpdateFile(file: GitHubFile): Promise<boolean> {
 	if (!TOKEN || !OWNER || !REPO) {
 		console.warn("GitHub sync not configured - skipping")
@@ -78,7 +106,10 @@ export async function createOrUpdateFile(file: GitHubFile): Promise<boolean> {
 
 		const body: Record<string, unknown> = {
 			message: file.message,
-			content: Buffer.from(file.content).toString("base64"),
+			content:
+				file.encoding === "base64"
+					? file.content
+					: Buffer.from(file.content, "utf8").toString("base64"),
 			branch: BRANCH,
 		}
 
